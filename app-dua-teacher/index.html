@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Arabic Mentor - Verified Master</title>
+    <style>
+        :root { --primary: #2c3e50; --accent: #27ae60; --bg: #f8f9fa; --link: #2980b9; }
+        body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); margin: 0; padding: 20px; color: #333; }
+        .container { max-width: 1000px; margin: 0 auto; }
+        .arabic-font { font-family: "Traditional Arabic", "Amiri", serif; font-size: 2.4rem; direction: rtl; }
+        .card { background: white; border-radius: 12px; padding: 2rem; box-shadow: 0 4px 12px rgba(0,0,0,0.08); margin-bottom: 20px; border-top: 5px solid var(--primary); }
+        .flowing-container { display: flex; flex-wrap: wrap; gap: 12px; direction: rtl; justify-content: flex-start; line-height: 4.5rem; }
+        .word-block { display: inline-flex; flex-direction: column; align-items: center; min-width: 50px; border-bottom: 2px solid #eee; padding: 0 4px; }
+        .wbw-ar { font-weight: bold; color: var(--primary); }
+        .wbw-en { font-size: 0.85rem; color: #666; line-height: 1.2; margin-bottom: 8px; font-style: italic; }
+        .segment-item { border-right: 4px solid var(--accent); padding: 15px; background: #fafafa; margin-bottom: 15px; }
+        .free-translation { margin-top: 25px; padding: 15px; background: #f0f4f8; border-radius: 8px; border-left: 4px solid var(--primary); font-style: italic; }
+        .references { margin-top: 15px; font-size: 0.9rem; color: #7f8c8d; border-top: 1px solid #eee; padding-top: 10px; }
+        .references a { color: var(--link); text-decoration: none; font-weight: bold; }
+        .controls { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 20px; position: sticky; top: 0; background: var(--bg); padding: 10px 0; z-index: 10; border-bottom: 1px solid #ddd; }
+        .btn { padding: 10px 18px; border-radius: 6px; border: 2px solid var(--primary); cursor: pointer; font-weight: bold; background: white; }
+        .btn.active { background: var(--primary); color: white; }
+        .lab-panel { display: none; background: #1a1a1a; color: #fff; padding: 20px; border-radius: 8px; margin-top: 20px; }
+        textarea { width: 100%; height: 400px; background: #000; color: #0f0; font-family: monospace; border: 1px solid #444; margin: 10px 0; font-size: 11px; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="controls">
+        <div style="display:flex; gap:8px; align-items:center; margin-right:20px;">
+            <button class="btn" onclick="App.prev()">←</button>
+            <span id="nav-indicator" style="font-weight:bold; min-width: 80px; text-align:center">1 / 2</span>
+            <button class="btn" onclick="App.next()">→</button>
+        </div>
+        <button class="btn" id="btn-seg" onclick="App.setView('seg')">Step-by-Step</button>
+        <button class="btn" id="btn-full" onclick="App.setView('full')">Full Flow</button>
+        <button class="btn" onclick="App.toggleLab()">⚙️ Lab</button>
+    </div>
+
+    <div id="display-area"></div>
+
+    <div id="lab-mode" class="lab-panel">
+        <h3>Master JSON Repository</h3>
+        <textarea id="json-input"></textarea><br>
+        <button class="btn" style="background:var(--accent); border:none; color:white;" onclick="App.saveData()">Save Changes</button>
+    </div>
+</div>
+
+<script>
+const FULL_REPO = [
+    {
+        id: "dhikr_salah_1",
+        title: "Dua After Salah (Part 1)",
+        fullTranslation: "There is no god but Allah alone, Who has no partner. To Him belongs the dominion and to Him belongs the praise, and He is over all things competent. O Allah, none can withhold what You give, and none can give what You withhold, and the fortune of the fortunate person does not benefit him against You.",
+        refs: [
+            { label: "Sahih Bukhari 844", url: "https://sunnah.com" },
+            { label: "Sahih Muslim 593", url: "https://sunnah.com" }
+        ],
+        segments: [
+            { ar: "لَا إِلَهَ إِلَّا اللهُ وَحْدَهُ", en: "There is no god but Allah alone", words: [{ar:"لَا", en:"No"}, {ar:"إِلَهَ", en:"god"}, {ar:"إِلَّا", en:"except"}, {ar:"اللهُ", en:"Allah"}, {ar:"وَحْدَهُ", en:"Alone"}] },
+            { ar: "لَا شَرِيكَ لَهُ", en: "He has no partner", words: [{ar:"لَا", en:"no"}, {ar:"شَرِيكَ", en:"partner"}, {ar:"لَهُ", en:"for Him"}] },
+            { ar: "لَهُ الْمُلْكُ وَلَهُ الْحَمْدُ", en: "To Him belongs the kingdom and praise", words: [{ar:"لَهُ", en:"To Him"}, {ar:"الْمُلْكُ", en:"the kingdom"}, {ar:"وَ", en:"and"}, {ar:"لَهُ", en:"to Him"}, {ar:"الْحَمْدُ", en:"the praise"}] },
+            { ar: "وَهُوَ عَلَى كُلِّ شَيْءٍ قَدِيرٌ", en: "And He is over all things Powerful", words: [{ar:"وَ", en:"and"}, {ar:"هُوَ", en:"He"}, {ar:"عَلَى", en:"over"}, {ar:"كُلِّ", en:"every"}, {ar:"شَيْءٍ", en:"thing"}, {ar:"قَدِيرٌ", en:"Powerful"}] },
+            { ar: "اللهُمَّ لَا مَانِعَ لِمَا أَعْطَيْتَ", en: "O Allah, none can withhold what You give", words: [{ar:"اللهُمَّ", en:"O Allah"}, {ar:"لَا", en:"No"}, {ar:"مَانِعَ", en:"preventer"}, {ar:"لِمَا", en:"for what"}, {ar:"أَعْطَيْتَ", en:"You gave"}] },
+            { ar: "وَلَا مُعْطِيَ لِمَا مَنَعْتَ", en: "And none can give what You withhold", words: [{ar:"وَ", en:"and"}, {ar:"لَا", en:"no"}, {ar:"مُعْطِيَ", en:"giver"}, {ar:"لِمَا", en:"for what"}, {ar:"مَنَعْتَ", en:"You withheld"}] },
+            { ar: "وَلَا يَنْفَعُ ذَا الْجَدِّ مِنْكَ الْجَدُّ", en: "And wealth does not benefit the wealthy against You", words: [{ar:"وَ", en:"and"}, {ar:"لَا", en:"not"}, {ar:"يَنْفَعُ", en:"benefits"}, {ar:"ذَا الْجَدِّ", en:"the wealthy"}, {ar:"مِنْكَ", en:"from You"}, {ar:"الْجَدُّ", en:"the wealth"}] }
+        ]
+    },
+    {
+        id: "dhikr_salah_2",
+        title: "Dua After Salah (Part 2)",
+        fullTranslation: "There is no god but Allah alone, Who has no partner. To Him belongs the dominion and to Him belongs the praise, and He is over all things competent. There is no power or strength except with Allah. We worship none but Him. To Him belongs the grace, favor, and beautiful praise. There is no god but Allah, we are sincere to Him in religion, even if the disbelievers detest it.",
+        refs: [{ label: "Sahih Muslim 594", url: "https://sunnah.com" }],
+        segments: [
+            { ar: "لَا إِلَهَ إِلَّا اللهُ وَحْدَهُ لَا شَرِيكَ لَهُ", en: "There is no god but Allah alone, He has no partner", words: [{ar:"لَا", en:"No"}, {ar:"إِلَهَ", en:"god"}, {ar:"إِلَّا", en:"except"}, {ar:"اللهُ", en:"Allah"}, {ar:"وَحْدَهُ", en:"Alone"}, {ar:"لَا", en:"no"}, {ar:"شَرِيكَ", en:"partner"}, {ar:"لَهُ", en:"for Him"}] },
+            { ar: "لَهُ الْمُلْكُ وَلَهُ الْحَمْدُ وَهُوَ عَلَى كُلِّ شَيْءٍ قَدِيرٌ", en: "To Him belongs the kingdom and praise, Powerful over all", words: [{ar:"لَهُ", en:"To Him"}, {ar:"الْمُلْكُ", en:"the kingdom"}, {ar:"وَ", en:"and"}, {ar:"لَهُ", en:"to Him"}, {ar:"الْحَمْدُ", en:"the praise"}, {ar:"وَ", en:"and"}, {ar:"هُوَ", en:"He"}, {ar:"عَلَى", en:"over"}, {ar:"كُلِّ", en:"every"}, {ar:"شَيْءٍ", en:"thing"}, {ar:"قَدِيرٌ", en:"Powerful"}] },
+            { ar: "لَا حَوْلَ وَلَا قُوَّةَ إِلَّا بِاللهِ", en: "There is no power or strength except by Allah", words: [{ar:"لَا", en:"No"}, {ar:"حَوْلَ", en:"power"}, {ar:"وَ", en:"and"}, {ar:"لَا", en:"no"}, {ar:"قُوَّةَ", en:"strength"}, {ar:"إِلَّا", en:"except"}, {ar:"بِاللهِ", en:"by Allah"}] },
+            { ar: "لَا إِلَهَ إِلَّا اللهُ وَلَا نَعْبُدُ إِلَّا إِيَّاهُ", en: "No god but Allah, we worship none but Him", words: [{ar:"لَا", en:"No"}, {ar:"إِلَهَ", en:"god"}, {ar:"إِلَّا", en:"except"}, {ar:"اللهُ", en:"Allah"}, {ar:"وَ", en:"and"}, {ar:"لَا", en:"not"}, {ar:"نَعْبُدُ", en:"we worship"}, {ar:"إِلَّا", en:"except"}, {ar:"إِيَّاهُ", en:"Him"}] },
+            { ar: "لَهُ النِّعْمَةُ وَلَهُ الْفَضْلُ وَلَهُ الثَّنَاءُ الْحَسَنُ", en: "To Him belongs grace, favor, and beautiful praise", words: [{ar:"لَهُ", en:"To Him"}, {ar:"النِّعْمَةُ", en:"the grace"}, {ar:"وَ", en:"and"}, {ar:"لَهُ", en:"to Him"}, {ar:"الْفَضْلُ", en:"the favor"}, {ar:"وَ", en:"and"}, {ar:"لَهُ", en:"to Him"}, {ar:"الثَّنَاءُ", en:"the praise"}, {ar:"الْحَسَنُ", en:"the beautiful"}] },
+            { ar: "لَا إِلَهَ إِلَّا اللهُ مُخْلِصِينَ لَهُ الدِّينَ وَلَوْ كَرِهَ الْكَافِرُونَ", en: "None but Allah, we are sincere to Him, even if disbelievers hate it", words: [{ar:"لَا", en:"No"}, {ar:"إِلَهَ", en:"god"}, {ar:"إِلَّا", en:"except"}, {ar:"اللهُ", en:"Allah"}, {ar:"مُخْلِصِينَ", en:"sincere"}, {ar:"لَهُ", en:"to Him"}, {ar:"الدِّينَ", en:"the religion"}, {ar:"وَ", en:"and"}, {ar:"لَوْ", en:"if"}, {ar:"كَرِهَ", en:"hated"}, {ar:"الْكَافِرُونَ", en:"the disbelievers"}] }
+        ]
+    }
+];
+
+const App = {
+    state: {
+        index: 0,
+        view: 'seg',
+        db: JSON.parse(localStorage.getItem('dua_master_v108')) || FULL_REPO
+    },
+    init() { this.render(); },
+    setView(v) {
+        this.state.view = v;
+        document.querySelectorAll('.btn').forEach(b => b.classList.remove('active'));
+        document.getElementById('btn-' + v).classList.add('active');
+        this.render();
+    },
+    next() { if(this.state.index < this.state.db.length - 1) { this.state.index++; this.render(); } },
+    prev() { if(this.state.index > 0) { this.state.index--; this.render(); } },
+    render() {
+        const target = document.getElementById('display-area');
+        const dua = this.state.db[this.state.index];
+        document.getElementById('nav-indicator').innerText = `${this.state.index + 1} / ${this.state.db.length}`;
+        let html = `<div class="card"><h2>${dua.title}</h2>`;
+        if (this.state.view === 'full') {
+            html += `<div class="flowing-container">`;
+            dua.segments.forEach(seg => {
+                seg.words.forEach(word => {
+                    html += `<div class="word-block"><span class="arabic-font wbw-ar">${word.ar}</span><span class="wbw-en">${word.en}</span></div>`;
+                });
+            });
+            html += `</div>`;
+        } else {
+            html += dua.segments.map(s => `
+                <div class="segment-item">
+                    <div class="arabic-font" style="text-align:right">${s.ar}</div>
+                    <div style="color:var(--accent); font-weight:bold; margin-bottom:5px;">${s.en}</div>
+                    <div class="flowing-container" style="line-height:normal">
+                        ${s.words.map(w => `<div class="word-block"><span class="arabic-font wbw-ar" style="font-size:1.4rem">${w.ar}</span><span class="wbw-en">${w.en}</span></div>`).join('')}
+                    </div>
+                </div>`).join('');
+        }
+        html += `<div class="free-translation"><strong>Full Meaning:</strong><br>${dua.fullTranslation}</div>`;
+        if(dua.refs) {
+            html += `<div class="references"><strong>References:</strong> ` + 
+                dua.refs.map(r => `<a href="${r.url}" target="_blank">${r.label}</a>`).join(' | ') + `</div>`;
+        }
+        target.innerHTML = html + `</div>`;
+    },
+    toggleLab() {
+        const el = document.getElementById('lab-mode');
+        el.style.display = el.style.display === 'block' ? 'none' : 'block';
+        document.getElementById('json-input').value = JSON.stringify(this.state.db, null, 2);
+    },
+    saveData() {
+        try {
+            this.state.db = JSON.parse(document.getElementById('json-input').value);
+            localStorage.setItem('dua_master_v108', JSON.stringify(this.state.db));
+            this.render();
+            alert("Database Updated Successfully.");
+        } catch(e) { alert("JSON Error: " + e.message); }
+    }
+};
+App.init();
+</script>
+</body>
+</html>
