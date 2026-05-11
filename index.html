@@ -3,25 +3,35 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel="stylesheet" href="https://jsdelivr.net">
     <title>My App Gallery</title>
+    <style>
+        body { font-family: system-ui; line-height: 1.6; max-width: 800px; margin: 2rem auto; padding: 0 1rem; background: #f4f4f9; }
+        h1 { text-align: center; color: #333; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem; margin-top: 2rem; }
+        article { background: white; padding: 1.5rem; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); display: flex; flex-direction: column; }
+        header { font-size: 1.2rem; margin-bottom: 0.5rem; color: #007bff; }
+        footer { margin-top: auto; pt: 1rem; }
+        .btn { display: inline-block; background: #007bff; color: white; padding: 0.5rem 1rem; text-decoration: none; border-radius: 4px; font-weight: bold; }
+        .btn:hover { background: #0056b3; }
+    </style>
 </head>
 <body>
-    <main class="container">
+    <main>
         <h1>Project Gallery</h1>
         <div class="grid">
 
             <article>
                 <header><strong>Dua Teacher</strong></header>
-                Helps memorize duas by giving word by word meanings, flowing translation etc.
-                <footer><a href="./app-dua-teacher/" role="button">Launch App</a></footer>
+                <p>Helps memorize duas by giving word by word meanings, flowing translation etc.</p>
+                <footer><a href="./app-dua-teacher/index.html" class="btn">Launch App</a></footer>
             </article>
 
             <article>
                 <header><strong>Calendar important dates</strong></header>
-                Help track important family dates - current month as well as previous & next months at a glance.
-                <footer><a href="./app-calendar-imp-dates/" role="button">Launch App</a></footer>
+                <p>Help track important family dates - current month as well as previous & next months at a glance.</p>
+                <footer><a href="./app-calendar-imp-dates/index.html" class="btn">Launch App</a></footer>
             </article>
+
         </div>
     </main>
 </body>
