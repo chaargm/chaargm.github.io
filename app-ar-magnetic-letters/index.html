@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Arabic Root Magnets</title>
+    <style>
+        :root {
+            --tray-bg: #f3e5ab;
+            --box-bg: #ffffff;
+            --tile-shadow: 0 4px 0 rgba(0,0,0,0.2);
+            --tile-lift: 0 12px 20px rgba(0,0,0,0.4);
+        }
+
+        body {
+            margin: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #e0f7fa;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            height: 100vh;
+            overflow: hidden;
+            user-select: none;
+        }
+
+        /* The Tray Area */
+        #tray-container {
+            width: 90%;
+            max-width: 600px;
+            height: 180px;
+            background: var(--tray-bg);
+            margin: 20px 0;
+            border-radius: 20px;
+            border: 8px solid #d4a373;
+            box-shadow: inset 0 4px 10px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .slot {
+            width: 80px;
+            height: 100px;
+            border: 3px dashed #bc8a5f;
+            border-radius: 12px;
+            pointer-events: none;
+        }
+
+        /* The Letter Tiles */
+        .magnet {
+            width: 75px;
+            height: 95px;
+            background: white;
+            border-radius: 12px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 3rem;
+            cursor: grab;
+            box-shadow: var(--tile-shadow);
+            position: absolute;
+            touch-action: none;
+            z-index: 10;
+            transition: transform 0.1s;
+            border: 1px solid rgba(0,0,0,0.05);
+        }
+
+        .magnet:active {
+            cursor: grabbing;
+            transform: scale(1.1);
+            box-shadow: var(--tile-lift);
+            z-index: 1000;
+        }
+
+        /* Visual "Clack" animation */
+        @keyframes clack {
+            0% { transform: scale(1.1); }
+            50% { transform: scale(0.95); }
+            100% { transform: scale(1); }
+        }
+
+        .clack-effect {
+            animation: clack 0.2s ease-out;
+        }
+
+        /* Storage Area */
+        #storage-box {
+            flex-grow: 1;
+            width: 100%;
+            background: var(--box-bg);
+            border-top: 5px solid #ccc;
+            padding: 20px;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            align-content: flex-start;
+            gap: 15px;
+            overflow-y: auto;
+        }
+
+        /* Placeholders to keep the flex layout stable */
+        .placeholder {
+            width: 75px;
+            height: 95px;
+            visibility: hidden;
+        }
+
+        .controls {
+            margin: 15px;
+            display: flex;
+            gap: 15px;
+        }
+
+        button {
+            padding: 12px 28px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            border: none;
+            border-radius: 50px;
+            background: #ff7043;
+            color: white;
+            cursor: pointer;
+            box-shadow: 0 5px #d84315;
+            transition: all 0.1s;
+        }
+
+        button:active {
+            transform: translateY(3px);
+            box-shadow: 0 2px #d84315;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="controls">
+        <button onclick="randomizeRoots()">🎲 Random Roots</button>
+        <button onclick="resetBoard()" style="background:#26a69a; box-shadow: 0 5px #00695c;">🔄 Put Back All</button>
+    </div>
+
+    <div id="tray-container">
+        <div class="slot" id="slot-0"></div>
+        <div class="slot" id="slot-1"></div>
+        <div class="slot" id="slot-2"></div>
+    </div>
+
+    <div id="storage-box">
+        <!-- Letters will be injected here -->
+    </div>
+
+    <script>
+        const letters = ["أ","ب","ت","ث","ج","ح","خ","د","ذ","ر","ز","س","ش","ص","ض","ط","ظ","ع","غ","ف","ق","ك","ل","م","ن","هـ","و","ي"];
+        const colors = ['#FFADAD', '#FFD6A5', '#FDFFB6', '#CAFFBF', '#9BF6FF', '#A0C4FF', '#BDB2FF', '#FFC6FF'];
+        const storageBox = document.getElementById('storage-box');
+        const magnets = [];
+
+        function init() {
+            letters.forEach((l, i) => {
+                // Create a placeholder to maintain grid
+                const holder = document.createElement('div');
+                holder.className = 'placeholder';
+                storageBox.appendChild(holder);
+
+                const div = document.createElement('div');
+                div.className = 'magnet';
+                div.textContent = l;
+                div.style.backgroundColor = colors[i % colors.length];
+                
+                // Initial positioning logic
+                const rect = holder.getBoundingClientRect();
+                div.style.left = rect.left + 'px';
+                div.style.top = rect.top + 'px';
+                
+                div.addEventListener('pointerdown', onPointerDown);
+                document.body.appendChild(div);
+                
+                magnets.push({el: div, holder: holder});
+            });
+        }
+
+        let activeElement = null;
+        let offset = { x: 0, y: 0 };
+
+        function onPointerDown(e) {
+            activeElement = e.target;
+            const rect = activeElement.getBoundingClientRect();
+            offset.x = e.clientX - rect.left;
+            offset.y = e.clientY - rect.top;
+            
+            activeElement.setPointerCapture(e.pointerId);
+            activeElement.style.transition = "none";
+            
+            activeElement.addEventListener('pointermove', onPointerMove);
+            activeElement.addEventListener('pointerup', onPointerUp);
+        }
+
+        function onPointerMove(e) {
+            if (!activeElement) return;
+            activeElement.style.left = (e.clientX - offset.x) + 'px';
+            activeElement.style.top = (e.clientY - offset.y) + 'px';
+        }
+
+        function onPointerUp(e) {
+            if (!activeElement) return;
+            
+            activeElement.classList.add('clack-effect');
+            setTimeout(() => activeElement.classList.remove('clack-effect'), 200);
+
+            activeElement.removeEventListener('pointermove', onPointerMove);
+            activeElement.removeEventListener('pointerup', onPointerUp);
+            activeElement = null;
+        }
+
+        function randomizeRoots() {
+            // Put everything back first
+            resetToBox();
+
+            // Pick 3 random indices
+            let picked = [];
+            while(picked.length < 3) {
+                let r = Math.floor(Math.random() * magnets.length);
+                if(!picked.includes(r)) picked.push(r);
+            }
+
+            picked.forEach((magIdx, slotIdx) => {
+                const mag = magnets[magIdx].el;
+                const slot = document.getElementById(`slot-${slotIdx}`);
+                const slotRect = slot.getBoundingClientRect();
+                
+                mag.style.transition = "all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275)";
+                mag.style.left = (slotRect.left + 2.5) + 'px';
+                mag.style.top = (slotRect.top + 2.5) + 'px';
+            });
+        }
+
+        function resetToBox() {
+            magnets.forEach(item => {
+                const rect = item.holder.getBoundingClientRect();
+                item.el.style.transition = "all 0.4s ease";
+                item.el.style.left = rect.left + 'px';
+                item.el.style.top = rect.top + 'px';
+            });
+        }
+
+        function resetBoard() {
+            resetToBox();
+        }
+
+        // Initialize and handle window resizing
+        window.onload = init;
+        window.onresize = resetToBox;
+
+    </script>
+</body>
+</html>
