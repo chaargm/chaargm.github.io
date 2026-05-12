@@ -1,0 +1,34 @@
+{
+  "page_id": 59,
+  "title": "Ways of Reciting the Basmalah Between Two Surahs",
+  "ai_instructions": "Role: Tajweed Expert. Task: Analyze the provided page image. 1. Identify the primary Tajweed rule discussed. 2. Extract 2-3 'Tough Words' for the glossary with their root meanings. 3. Provide a 'Word Breakdown' for the main example sentence, mapping Arabic words to English. 4. Provide a 'Free Flowing Translation' of the rule/concept. Output MUST be valid JSON matching this exact structure.",
+  "glossary": [
+    {
+      "word": "جائز",
+      "meaning": "Permissible; from the root 'j-w-z' meaning to pass or be allowed."
+    },
+    {
+      "word": "ممنوع / ممتنع",
+      "meaning": "Forbidden / Prohibited; from the root 'm-n-’' meaning to prevent or hinder."
+    },
+    {
+      "word": "قطع / وصل",
+      "meaning": "Severing / Joining; 'qat' refers to stopping or taking a breath, while 'wasl' refers to connecting the recitation."
+    }
+  ],
+  "word_breakdown": [
+    {
+      "arabic": "أوجه",
+      "meaning": "Ways / Methods"
+    },
+    {
+      "arabic": "البسملة",
+      "meaning": "The Basmalah (Bismillah phrase)"
+    },
+    {
+      "arabic": "بين السورتين",
+      "meaning": "Between the two chapters (Surahs)"
+    }
+  ],
+  "translation": "This rule discusses the four logical methods of reciting the Basmalah when transitioning between two consecutive Surahs. Out of these four ways, three are permissible and one is forbidden. The permissible ways involve either stopping between everything, joining everything, or stopping after the first Surah and joining the Basmalah with the next Surah. The forbidden method is to join the end of the first Surah with the Basmalah and then stop, as the Basmalah is intended to begin a chapter, not conclude one."
+}

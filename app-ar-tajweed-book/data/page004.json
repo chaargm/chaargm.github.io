@@ -1,0 +1,34 @@
+{
+  "page_id": 62,
+  "title": "Observation / Warning regarding Arabic Grammar in Recitation",
+  "ai_instructions": "Role: Tajweed Expert. Task: Analyze the provided page image. 1. Identify the primary Tajweed rule discussed. 2. Extract 2-3 'Tough Words' for the glossary with their root meanings. 3. Provide a 'Word Breakdown' for the main example sentence, mapping Arabic words to English. 4. Provide a 'Free Flowing Translation' of the rule/concept. Output MUST be valid JSON matching this exact structure.",
+  "glossary": [
+    {
+      "word": "تَنْبِيه",
+      "meaning": "Attention / Notification; from the root 'n-b-h' meaning to alert, wake up, or draw notice to something important."
+    },
+    {
+      "word": "الإِعْرَاب",
+      "meaning": "Desinential Inflection / Grammar; from the root '’r-b' referring to the correct vowel endings of words that clarify their grammatical role."
+    },
+    {
+      "word": "تَسْقُطُ",
+      "meaning": "Falls away / Dropped; from the root 's-q-t' meaning to drop or omit, specifically referring to the Hamzatul Wasl being skipped during connection."
+    }
+  ],
+  "word_breakdown": [
+    {
+      "arabic": "عَلَى القَارِئِ",
+      "meaning": "Upon the reader (the reader must)"
+    },
+    {
+      "arabic": "يُرَاعِيَ",
+      "meaning": "Observe / take into account"
+    },
+    {
+      "arabic": "قَوَاعِدَ العَرَبِيَّةِ",
+      "meaning": "Rules of the Arabic language"
+    }
+  ],
+  "translation": "This note alerts the reciter that when joining the Seek of Refuge (Isti'adhah), the Basmalah, and the beginning of a Surah together, they must strictly observe Arabic grammatical rules (I'rab). Specifically, if connecting, the final 'Meem' in 'Ar-Rajeem' and 'Ar-Raheem' must be pronounced with a Kasrah (vowel sound 'i'). Additionally, the connecting Hamzah (Hamzatul Wasl) at the beginning of the first word of the Surah—such as 'Iqra'—is dropped in pronunciation during the transition."
+}

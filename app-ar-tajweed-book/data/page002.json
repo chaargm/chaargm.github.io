@@ -1,0 +1,30 @@
+{
+  "page_id": 60,
+  "title": "Permissible Ways of the Basmalah Between Two Surahs",
+  "ai_instructions": "Role: Tajweed Expert. Task: Analyze the provided page image. 1. Identify the primary Tajweed rule discussed. 2. Extract 2-3 'Tough Words' for the glossary with their root meanings. 3. Provide a 'Word Breakdown' for the main example sentence, mapping Arabic words to English. 4. Provide a 'Free Flowing Translation' of the rule/concept. Output MUST be valid JSON matching this exact structure.",
+  "glossary": [
+    {
+      "word": "المُنقَضِية",
+      "meaning": "The concluded / finished; from the root 'q-d-y' referring to something that has reached its end or completion."
+    },
+    {
+      "word": "الآتِيَة",
+      "meaning": "The coming / next; from the root 'a-t-y' referring to that which is approaching or follows next."
+    },
+    {
+      "word": "الجَمِيع",
+      "meaning": "All / Everything; from the root 'j-m-’' referring to the whole group or collection of parts together."
+    }
+  ],
+  "word_breakdown": [
+    {
+      "arabic": "قَطْعُ الجَمِيع",
+      "meaning": "Severing (stopping between) all [three parts]"
+    },
+    {
+      "arabic": "وَصْلُ الجَمِيع",
+      "meaning": "Joining all [three parts] together"
+    }
+  ],
+  "translation": "This page illustrates the three permissible ways to recite the transition between two Surahs using the Basmalah. 1) 'Qat' al-Jami'': Stopping after the first Surah and after the Basmalah. 2) Stopping at the end of the first Surah, then joining the Basmalah with the start of the next Surah. 3) 'Wasl al-Jami'': Joining the end of the first Surah, the Basmalah, and the beginning of the next Surah all in one continuous breath. The examples use the end of Surah Al-Ikhlas and the start of Surah Al-Falaq to demonstrate these connections."
+}

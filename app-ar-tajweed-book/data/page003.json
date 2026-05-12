@@ -1,0 +1,30 @@
+{
+  "page_id": 61,
+  "title": "The Forbidden Way of the Basmalah Between Two Surahs",
+  "ai_instructions": "Role: Tajweed Expert. Task: Analyze the provided page image. 1. Identify the primary Tajweed rule discussed. 2. Extract 2-3 'Tough Words' for the glossary with their root meanings. 3. Provide a 'Word Breakdown' for the main example sentence, mapping Arabic words to English. 4. Provide a 'Free Flowing Translation' of the rule/concept. Output MUST be valid JSON matching this exact structure.",
+  "glossary": [
+    {
+      "word": "يُوهِمُ",
+      "meaning": "Gives the wrong impression / Misleads; from the root 'w-h-m' referring to a delusion, misconception, or false assumption."
+    },
+    {
+      "word": "مُمتَنِع",
+      "meaning": "Prohibited / Disallowed; from the root 'm-n-’' meaning something that is held back or prevented from being done."
+    }
+  ],
+  "word_breakdown": [
+    {
+      "arabic": "وَصْلُ آخِرِ السُّورَةِ",
+      "meaning": "Joining the end of the Surah"
+    },
+    {
+      "arabic": "بِالبَسْمَلَةِ",
+      "meaning": "with the Basmalah"
+    },
+    {
+      "arabic": "مَعَ قَطْعِ",
+      "meaning": "while severing (stopping)"
+    }
+  ],
+  "translation": "This page explains the singular forbidden method of reciting the Basmalah between two Surahs. It is prohibited to join the end of the concluding Surah with the Basmalah and then take a breath (stop) before starting the next Surah. This is forbidden because it might lead a listener to mistakenly believe that the Basmalah is actually the final verse of the preceding Surah, whereas the Basmalah is strictly intended to be the opening of a new chapter."
+}
