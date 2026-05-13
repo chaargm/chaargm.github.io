@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Modular Voice Timer v1.1</title>
+    <!-- 
+    [PROJECT SPECS]
+    - Goal: 10-minute countdown with audio feedback.
+    - Audio Logic: Beep every 60s. TTS every 60s. Final Minute: TTS every 10s.
+    - Debug: Double-click timer to jump to 1:05. Hover for console cheat-sheet.
+    -->
+    <style>
+        :root { --bg: #ffffff; --text: #1d1d1f; --accent: #0071e3; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background: var(--bg); color: var(--text); display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; margin: 0; }
+        
+        /* Tooltip Container */
+        #display { 
+            font-size: clamp(5rem, 15vw, 10rem); 
+            font-weight: 700; 
+            font-variant-numeric: tabular-nums; 
+            margin-bottom: 2rem; 
+            cursor: help;
+            position: relative;
+        }
+        
+        /* Simple CSS Tooltip */
+        #display:hover::after {
+            content: "Dbl-click to jump to 1:05 | Console: State.timeLeft = [seconds]; UI.update();";
+            position: absolute;
+            bottom: -30px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 0.7rem;
+            color: #86868b;
+            white-space: nowrap;
+            font-weight: 400;
+        }
+
+        .controls { display: flex; gap: 1rem; }
+        button { padding: 12px 24px; font-size: 1rem; font-weight: 600; border-radius: 8px; border: none; cursor: pointer; transition: transform 0.1s; }
+        #startBtn { background: var(--accent); color: white; }
+        #resetBtn { background: #e8e8ed; color: var(--text); }
+        button:active { transform: scale(0.96); }
+        .test-status { margin-top: 40px; font-size: 0.8rem; color: #86868b; }
+    </style>
+</head>
+<body>
+
+    <div id="display" title="">10:00</div>
+    <div class="controls">
+        <button id="startBtn">Start Timer</button>
+        <button id="resetBtn">Reset</button>
+    </div>
+    <div class="test-status">Check Console (F12) for Unit Tests</div>
+
+    <script>
+        /* ==========================================
+           1. STATE MODULE
+           ========================================== */
+        const State = {
+            initialTime: 600,
+            timeLeft: 600,
+            timerId: null,
+            isRunning: false,
+
+            tick() {
+                if (this.timeLeft > 0) {
+                    this.timeLeft--;
+                    return true;
+                }
+                return false;
+            },
+            reset() {
+                this.timeLeft = this.initialTime;
+                this.isRunning = false;
+                clearInterval(this.timerId);
+                this.timerId = null;
+            }
+        };
+
+        /* ==========================================
+           2. AUDIO MODULE
+           ========================================== */
+        const AudioService = {
+            speak(text) {
+                window.speechSynthesis.cancel();
+                const msg = new SpeechSynthesisUtterance(text);
+                window.speechSynthesis.speak(msg);
+            },
+            beep() {
+                const ctx = new (window.AudioContext || window.webkitAudioContext)();
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+                osc.frequency.value = 880; 
+                gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.5);
+                osc.start();
+                osc.stop(ctx.currentTime + 0.5);
+            },
+            handleAnnouncements(seconds) {
+                if (seconds > 0 && seconds % 60 === 0) this.beep();
+                
+                if (seconds > 60 && seconds % 60 === 0) {
+                    this.speak(`${seconds / 60} minutes remaining`);
+                } else if (seconds <= 60 && seconds > 0 && seconds % 10 === 0) {
+                    this.speak(`${seconds} seconds`);
+                } else if (seconds === 0) {
+                    this.speak("Time is up");
+                    this.beep();
+                }
+            }
+        };
+
+        /* ==========================================
+           3. UI MODULE
+           ========================================== */
+        const UI = {
+            display: document.getElementById('display'),
+            
+            formatTime(totalSeconds) {
+                const m = Math.floor(totalSeconds / 60);
+                const s = totalSeconds % 60;
+                return `${m}:${s.toString().padStart(2, '0')}`;
+            },
+            update() {
+                this.display.textContent = this.formatTime(State.timeLeft);
+            }
+        };
+
+        /* ==========================================
+           4. CORE LOGIC & DEBUG EVENT
+           ========================================== */
+        function start() {
+            if (State.isRunning) return;
+            State.isRunning = true;
+            AudioService.speak("Started");
+
+            State.timerId = setInterval(() => {
+                const active = State.tick();
+                UI.update();
+                AudioService.handleAnnouncements(State.timeLeft);
+                if (!active) {
+                    clearInterval(State.timerId);
+                    State.isRunning = false;
+                }
+            }, 1000);
+        }
+
+        // Standard Listeners
+        document.getElementById('startBtn').addEventListener('click', start);
+        document.getElementById('resetBtn').addEventListener('click', () => {
+            State.reset();
+            UI.update();
+        });
+
+        // Option 1: Secret Double-Click Debug
+        UI.display.addEventListener('dblclick', () => {
+            State.timeLeft = 65;
+            UI.update();
+            console.log("🛠️ Debug: Jumped to 1:05. Click Start to test final minute.");
+        });
+
+        /* ==========================================
+           5. UNIT TESTS
+           ========================================== */
+        const Tests = {
+            run() {
+                console.group("⏱️ Timer Unit Tests");
+                this.assert(UI.formatTime(600) === "10:00", "Format 600s");
+                this.assert(UI.formatTime(65) === "1:05", "Format 65s");
+                console.log("Tip: Use 'State.timeLeft = X; UI.update();' to skip time.");
+                console.groupEnd();
+            },
+            assert(condition, message) {
+                console.log(condition ? `✅ PASS: ${message}` : `❌ FAIL: ${message}`);
+            }
+        };
+
+        Tests.run();
+    </script>
+</body>
+</html>
