@@ -1,0 +1,800 @@
+[
+    {
+        "Order": "1",
+        "Sura Name": "Al-Alaq",
+        "Number": "96",
+        "Type": "Meccan",
+        "Note": ""
+    },
+    {
+        "Order": "2",
+        "Sura Name": "Al-Qalam",
+        "Number": "68",
+        "Type": "Meccan",
+        "Note": "Except 17-33 and 48-50, from Medina"
+    },
+    {
+        "Order": "3",
+        "Sura Name": "Al-Muzzammil",
+        "Number": "73",
+        "Type": "Meccan",
+        "Note": "Except 10, 11 and 20, from Medina"
+    },
+    {
+        "Order": "4",
+        "Sura Name": "Al-Muddaththir",
+        "Number": "74",
+        "Type": "Meccan",
+        "Note": ""
+    },
+    {
+        "Order": "5",
+        "Sura Name": "Al-Faatiha",
+        "Number": "1",
+        "Type": "Meccan",
+        "Note": ""
+    },
+    {
+        "Order": "6",
+        "Sura Name": "Al-Masad",
+        "Number": "111",
+        "Type": "Meccan",
+        "Note": ""
+    },
+    {
+        "Order": "7",
+        "Sura Name": "At-Takwir",
+        "Number": "81",
+        "Type": "Meccan",
+        "Note": ""
+    },
+    {
+        "Order": "8",
+        "Sura Name": "Al-A'laa",
+        "Number": "87",
+        "Type": "Meccan",
+        "Note": ""
+    },
+    {
+        "Order": "9",
+        "Sura Name": "Al-Lail",
+        "Number": "92",
+        "Type": "Meccan",
+        "Note": ""
+    },
+    {
+        "Order": "10",
+        "Sura Name": "Al-Fajr",
+        "Number": "89",
+        "Type": "Meccan",
+        "Note": ""
+    },
+    {
+        "Order": "11",
+        "Sura Name": "Ad-Dhuhaa",
+        "Number": "93",
+        "Type": "Meccan",
+        "Note": ""
+    },
+    {
+        "Order": "12",
+        "Sura Name": "Ash-Sharh",
+        "Number": "94",
+        "Type": "Meccan",
+        "Note": ""
+    },
+    {
+        "Order": "13",
+        "Sura Name": "Al-Asr",
+        "Number": "103",
+        "Type": "Meccan",
+        "Note": ""
+    },
+    {
+        "Order": "14",
+        "Sura Name": "Al-Aadiyaat",
+        "Number": "100",
+        "Type": "Meccan",
+        "Note": ""
+    },
+    {
+        "Order": "15",
+        "Sura Name": "Al-Kawthar",
+        "Number": "108",
+        "Type": "Meccan",
+        "Note": ""
+    },
+    {
+        "Order": "16",
+        "Sura Name": "At-Takaathur",
+        "Number": "102",
+        "Type": "Meccan",
+        "Note": ""
+    },
+    {
+        "Order": "17",
+        "Sura Name": "Al-Maa'un",
+        "Number": "107",
+        "Type": "Meccan",
+        "Note": "Only 1-3 from Mecca; the rest from Medina"
+    },
+    {
+        "Order": "18",
+        "Sura Name": "Al-Kaafiroon",
+        "Number": "109",
+        "Type": "Meccan",
+        "Note": ""
+    },
+    {
+        "Order": "19",
+        "Sura Name": "Al-Fil",
+        "Number": "105",
+        "Type": "Meccan",
+        "Note": ""
+    },
+    {
+        "Order": "20",
+        "Sura Name": "Al-Falaq",
+        "Number": "113",
+        "Type": "Meccan",
+        "Note": ""
+    },
+    {
+        "Order": "21",
+        "Sura Name": "An-Naas",
+        "Number": "114",
+        "Type": "Meccan",
+        "Note": ""
+    },
+    {
+        "Order": "22",
+        "Sura Name": "Al-Ikhlaas",
+        "Number": "112",
+        "Type": "Meccan",
+        "Note": ""
+    },
+    {
+        "Order": "23",
+        "Sura Name": "An-Najm",
+        "Number": "53",
+        "Type": "Meccan",
+        "Note": "Except 32, from Medina"
+    },
+    {
+        "Order": "24",
+        "Sura Name": "Abasa",
+        "Number": "80",
+        "Type": "Meccan",
+        "Note": ""
+    },
+    {
+        "Order": "25",
+        "Sura Name": "Al-Qadr",
+        "Number": "97",
+        "Type": "Meccan",
+        "Note": ""
+    },
+    {
+        "Order": "26",
+        "Sura Name": "Ash-Shams",
+        "Number": "91",
+        "Type": "Meccan",
+        "Note": ""
+    },
+    {
+        "Order": "27",
+        "Sura Name": "Al-Burooj",
+        "Number": "85",
+        "Type": "Meccan",
+        "Note": ""
+    },
+    {
+        "Order": "28",
+        "Sura Name": "At-Tin",
+        "Number": "95",
+        "Type": "Meccan",
+        "Note": ""
+    },
+    {
+        "Order": "29",
+        "Sura Name": "Quraish",
+        "Number": "106",
+        "Type": "Meccan",
+        "Note": ""
+    },
+    {
+        "Order": "30",
+        "Sura Name": "Al-Qaari'a",
+        "Number": "101",
+        "Type": "Meccan",
+        "Note": ""
+    },
+    {
+        "Order": "31",
+        "Sura Name": "Al-Qiyaama",
+        "Number": "75",
+        "Type": "Meccan",
+        "Note": ""
+    },
+    {
+        "Order": "32",
+        "Sura Name": "Al-Humaza",
+        "Number": "104",
+        "Type": "Meccan",
+        "Note": ""
+    },
+    {
+        "Order": "33",
+        "Sura Name": "Al-Mursalaat",
+        "Number": "77",
+        "Type": "Meccan",
+        "Note": "Except 48, from Medina"
+    },
+    {
+        "Order": "34",
+        "Sura Name": "Qaaf",
+        "Number": "50",
+        "Type": "Meccan",
+        "Note": "Except 38, from Medina"
+    },
+    {
+        "Order": "35",
+        "Sura Name": "Al-Balad",
+        "Number": "90",
+        "Type": "Meccan",
+        "Note": ""
+    },
+    {
+        "Order": "36",
+        "Sura Name": "At-Taariq",
+        "Number": "86",
+        "Type": "Meccan",
+        "Note": ""
+    },
+    {
+        "Order": "37",
+        "Sura Name": "Al-Qamar",
+        "Number": "54",
+        "Type": "Meccan",
+        "Note": "Except 44-46, from Medina"
+    },
+    {
+        "Order": "38",
+        "Sura Name": "Saad",
+        "Number": "38",
+        "Type": "Meccan",
+        "Note": ""
+    },
+    {
+        "Order": "39",
+        "Sura Name": "Al-A'raaf",
+        "Number": "7",
+        "Type": "Meccan",
+        "Note": "Except 163-170, from Medina"
+    },
+    {
+        "Order": "40",
+        "Sura Name": "Al-Jinn",
+        "Number": "72",
+        "Type": "Meccan",
+        "Note": ""
+    },
+    {
+        "Order": "41",
+        "Sura Name": "Yaseen",
+        "Number": "36",
+        "Type": "Meccan",
+        "Note": "Except 45, from Medina"
+    },
+    {
+        "Order": "42",
+        "Sura Name": "Al-Furqaan",
+        "Number": "25",
+        "Type": "Meccan",
+        "Note": "Except 68-70, from Medina"
+    },
+    {
+        "Order": "43",
+        "Sura Name": "Faatir",
+        "Number": "35",
+        "Type": "Meccan",
+        "Note": ""
+    },
+    {
+        "Order": "44",
+        "Sura Name": "Maryam",
+        "Number": "19",
+        "Type": "Meccan",
+        "Note": "Except 58 and 71, from Medina"
+    },
+    {
+        "Order": "45",
+        "Sura Name": "Taa-Haa",
+        "Number": "20",
+        "Type": "Meccan",
+        "Note": "Except 130 and 131, from Medina"
+    },
+    {
+        "Order": "46",
+        "Sura Name": "Al-Waaqia",
+        "Number": "56",
+        "Type": "Meccan",
+        "Note": "Except 81 and 82, from Medina"
+    },
+    {
+        "Order": "47",
+        "Sura Name": "Ash-Shu'araa",
+        "Number": "26",
+        "Type": "Meccan",
+        "Note": "Except 197 and 224-227, from Medina"
+    },
+    {
+        "Order": "48",
+        "Sura Name": "An-Naml",
+        "Number": "27",
+        "Type": "Meccan",
+        "Note": ""
+    },
+    {
+        "Order": "49",
+        "Sura Name": "Al-Qasas",
+        "Number": "28",
+        "Type": "Meccan",
+        "Note": "Except 52-55 from Medina and 85 from Juhfa at the time of the Hijra"
+    },
+    {
+        "Order": "50",
+        "Sura Name": "Al-Israa",
+        "Number": "17",
+        "Type": "Meccan",
+        "Note": "Except 26, 32, 33, 57, 73-80, from Medina"
+    },
+    {
+        "Order": "51",
+        "Sura Name": "Yunus",
+        "Number": "10",
+        "Type": "Meccan",
+        "Note": "Except 40, 94, 95, 96, from Medina"
+    },
+    {
+        "Order": "52",
+        "Sura Name": "Hud",
+        "Number": "11",
+        "Type": "Meccan",
+        "Note": "Except 12, 17, 114, from Medina"
+    },
+    {
+        "Order": "53",
+        "Sura Name": "Yusuf",
+        "Number": "12",
+        "Type": "Meccan",
+        "Note": "Except 1, 2, 3, 7, from Medina"
+    },
+    {
+        "Order": "54",
+        "Sura Name": "Al-Hijr",
+        "Number": "15",
+        "Type": "Meccan",
+        "Note": "Except 87, from Medina"
+    },
+    {
+        "Order": "55",
+        "Sura Name": "Al-An'aam",
+        "Number": "6",
+        "Type": "Meccan",
+        "Note": "Except 20, 23, 91, 93, 114, 151, 152, 153, from Medina"
+    },
+    {
+        "Order": "56",
+        "Sura Name": "As-Saaffaat",
+        "Number": "37",
+        "Type": "Meccan",
+        "Note": ""
+    },
+    {
+        "Order": "57",
+        "Sura Name": "Luqman",
+        "Number": "31",
+        "Type": "Meccan",
+        "Note": "Except 27-29, from Medina"
+    },
+    {
+        "Order": "58",
+        "Sura Name": "Saba",
+        "Number": "34",
+        "Type": "Meccan",
+        "Note": ""
+    },
+    {
+        "Order": "59",
+        "Sura Name": "Az-Zumar",
+        "Number": "39",
+        "Type": "Meccan",
+        "Note": ""
+    },
+    {
+        "Order": "60",
+        "Sura Name": "Al-Ghaafir",
+        "Number": "40",
+        "Type": "Meccan",
+        "Note": "Except 56, 57, from Medina"
+    },
+    {
+        "Order": "61",
+        "Sura Name": "Fussilat",
+        "Number": "41",
+        "Type": "Meccan",
+        "Note": ""
+    },
+    {
+        "Order": "62",
+        "Sura Name": "Ash-Shura",
+        "Number": "42",
+        "Type": "Meccan",
+        "Note": "Except 23, 24, 25, 27, from Medina"
+    },
+    {
+        "Order": "63",
+        "Sura Name": "Az-Zukhruf",
+        "Number": "43",
+        "Type": "Meccan",
+        "Note": "Except 54, from Medina"
+    },
+    {
+        "Order": "64",
+        "Sura Name": "Ad-Dukhaan",
+        "Number": "44",
+        "Type": "Meccan",
+        "Note": ""
+    },
+    {
+        "Order": "65",
+        "Sura Name": "Al-Jaathiya",
+        "Number": "45",
+        "Type": "Meccan",
+        "Note": "Except 14, from Medina"
+    },
+    {
+        "Order": "66",
+        "Sura Name": "Al-Ahqaf",
+        "Number": "46",
+        "Type": "Meccan",
+        "Note": "Except 10, 15, 35, from Medina"
+    },
+    {
+        "Order": "67",
+        "Sura Name": "Adh-Dhaariyat",
+        "Number": "51",
+        "Type": "Meccan",
+        "Note": ""
+    },
+    {
+        "Order": "68",
+        "Sura Name": "Al-Ghaashiya",
+        "Number": "88",
+        "Type": "Meccan",
+        "Note": ""
+    },
+    {
+        "Order": "69",
+        "Sura Name": "Al-Kahf",
+        "Number": "18",
+        "Type": "Meccan",
+        "Note": "Except 28, 83-101, from Medina"
+    },
+    {
+        "Order": "70",
+        "Sura Name": "An-Nahl",
+        "Number": "16",
+        "Type": "Meccan",
+        "Note": "Except the last three verses from Medina"
+    },
+    {
+        "Order": "71",
+        "Sura Name": "Nooh",
+        "Number": "71",
+        "Type": "Meccan",
+        "Note": ""
+    },
+    {
+        "Order": "72",
+        "Sura Name": "Ibrahim",
+        "Number": "14",
+        "Type": "Meccan",
+        "Note": "Except 28, 29, from Medina"
+    },
+    {
+        "Order": "73",
+        "Sura Name": "Al-Anbiyaa",
+        "Number": "21",
+        "Type": "Meccan",
+        "Note": ""
+    },
+    {
+        "Order": "74",
+        "Sura Name": "Al-Muminoon",
+        "Number": "23",
+        "Type": "Meccan",
+        "Note": ""
+    },
+    {
+        "Order": "75",
+        "Sura Name": "As-Sajda",
+        "Number": "32",
+        "Type": "Meccan",
+        "Note": "Except 16-20, from Medina"
+    },
+    {
+        "Order": "76",
+        "Sura Name": "At-Tur",
+        "Number": "52",
+        "Type": "Meccan",
+        "Note": ""
+    },
+    {
+        "Order": "77",
+        "Sura Name": "Al-Mulk",
+        "Number": "67",
+        "Type": "Meccan",
+        "Note": ""
+    },
+    {
+        "Order": "78",
+        "Sura Name": "Al-Haaqqa",
+        "Number": "69",
+        "Type": "Meccan",
+        "Note": ""
+    },
+    {
+        "Order": "79",
+        "Sura Name": "Al-Ma'aarij",
+        "Number": "70",
+        "Type": "Meccan",
+        "Note": ""
+    },
+    {
+        "Order": "80",
+        "Sura Name": "An-Naba",
+        "Number": "78",
+        "Type": "Meccan",
+        "Note": ""
+    },
+    {
+        "Order": "81",
+        "Sura Name": "An-Naazi'aat",
+        "Number": "79",
+        "Type": "Meccan",
+        "Note": ""
+    },
+    {
+        "Order": "82",
+        "Sura Name": "Al-Infitaar",
+        "Number": "82",
+        "Type": "Meccan",
+        "Note": ""
+    },
+    {
+        "Order": "83",
+        "Sura Name": "Al-Inshiqaaq",
+        "Number": "84",
+        "Type": "Meccan",
+        "Note": ""
+    },
+    {
+        "Order": "84",
+        "Sura Name": "Ar-Room",
+        "Number": "30",
+        "Type": "Meccan",
+        "Note": "Except 17, from Medina"
+    },
+    {
+        "Order": "85",
+        "Sura Name": "Al-Ankaboot",
+        "Number": "29",
+        "Type": "Meccan",
+        "Note": "Except 1-11, from Medina"
+    },
+    {
+        "Order": "86",
+        "Sura Name": "Al-Mutaffifin",
+        "Number": "83",
+        "Type": "Meccan",
+        "Note": ""
+    },
+    {
+        "Order": "87",
+        "Sura Name": "Al-Baqara",
+        "Number": "2",
+        "Type": "Medinan",
+        "Note": "Except 281 from Mina at the time of the Last Hajj"
+    },
+    {
+        "Order": "88",
+        "Sura Name": "Al-Anfaal",
+        "Number": "8",
+        "Type": "Medinan",
+        "Note": "Except 30-36 from Mecca"
+    },
+    {
+        "Order": "89",
+        "Sura Name": "Aal-i-Imraan",
+        "Number": "3",
+        "Type": "Medinan",
+        "Note": ""
+    },
+    {
+        "Order": "90",
+        "Sura Name": "Al-Ahzaab",
+        "Number": "33",
+        "Type": "Medinan",
+        "Note": ""
+    },
+    {
+        "Order": "91",
+        "Sura Name": "Al-Mumtahana",
+        "Number": "60",
+        "Type": "Medinan",
+        "Note": ""
+    },
+    {
+        "Order": "92",
+        "Sura Name": "An-Nisaa",
+        "Number": "4",
+        "Type": "Medinan",
+        "Note": ""
+    },
+    {
+        "Order": "93",
+        "Sura Name": "Az-Zalzala",
+        "Number": "99",
+        "Type": "Medinan",
+        "Note": ""
+    },
+    {
+        "Order": "94",
+        "Sura Name": "Al-Hadid",
+        "Number": "57",
+        "Type": "Medinan",
+        "Note": ""
+    },
+    {
+        "Order": "95",
+        "Sura Name": "Muhammad",
+        "Number": "47",
+        "Type": "Medinan",
+        "Note": "Except 13, revealed during the Prophet's Hijrah"
+    },
+    {
+        "Order": "96",
+        "Sura Name": "Ar-Ra'd",
+        "Number": "13",
+        "Type": "Medinan",
+        "Note": ""
+    },
+    {
+        "Order": "97",
+        "Sura Name": "Ar-Rahmaan",
+        "Number": "55",
+        "Type": "Medinan",
+        "Note": ""
+    },
+    {
+        "Order": "98",
+        "Sura Name": "Al-Insaan",
+        "Number": "76",
+        "Type": "Medinan",
+        "Note": ""
+    },
+    {
+        "Order": "99",
+        "Sura Name": "At-Talaaq",
+        "Number": "65",
+        "Type": "Medinan",
+        "Note": ""
+    },
+    {
+        "Order": "100",
+        "Sura Name": "Al-Bayyina",
+        "Number": "98",
+        "Type": "Medinan",
+        "Note": ""
+    },
+    {
+        "Order": "101",
+        "Sura Name": "Al-Hashr",
+        "Number": "59",
+        "Type": "Medinan",
+        "Note": ""
+    },
+    {
+        "Order": "102",
+        "Sura Name": "An-Noor",
+        "Number": "24",
+        "Type": "Medinan",
+        "Note": ""
+    },
+    {
+        "Order": "103",
+        "Sura Name": "Al-Hajj",
+        "Number": "22",
+        "Type": "Medinan",
+        "Note": "Except 52-55, revealed between Mecca and Medina"
+    },
+    {
+        "Order": "104",
+        "Sura Name": "Al-Munaafiqoon",
+        "Number": "63",
+        "Type": "Medinan",
+        "Note": ""
+    },
+    {
+        "Order": "105",
+        "Sura Name": "Al-Mujaadila",
+        "Number": "58",
+        "Type": "Medinan",
+        "Note": ""
+    },
+    {
+        "Order": "106",
+        "Sura Name": "Al-Hujuraat",
+        "Number": "49",
+        "Type": "Medinan",
+        "Note": ""
+    },
+    {
+        "Order": "107",
+        "Sura Name": "At-Tahrim",
+        "Number": "66",
+        "Type": "Medinan",
+        "Note": ""
+    },
+    {
+        "Order": "108",
+        "Sura Name": "At-Taghaabun",
+        "Number": "64",
+        "Type": "Medinan",
+        "Note": ""
+    },
+    {
+        "Order": "109",
+        "Sura Name": "As-Saff",
+        "Number": "61",
+        "Type": "Medinan",
+        "Note": ""
+    },
+    {
+        "Order": "110",
+        "Sura Name": "Al-Jumu'a",
+        "Number": "62",
+        "Type": "Medinan",
+        "Note": ""
+    },
+    {
+        "Order": "111",
+        "Sura Name": "Al-Fath",
+        "Number": "48",
+        "Type": "Medinan",
+        "Note": "Revealed while returning from Hudaybiyya"
+    },
+    {
+        "Order": "112",
+        "Sura Name": "Al-Maaida",
+        "Number": "5",
+        "Type": "Medinan",
+        "Note": "Except 3, revealed at Arafat on Last Hajj"
+    },
+    {
+        "Order": "113",
+        "Sura Name": "At-Tawba",
+        "Number": "9",
+        "Type": "Medinan",
+        "Note": "Except last two verses from Mecca"
+    },
+    {
+        "Order": "114",
+        "Sura Name": "An-Nasr",
+        "Number": "110",
+        "Type": "Medinan",
+        "Note": "Revealed at Mina on Last Hajj, but regarded as Medinan sura"
+    }
+]
