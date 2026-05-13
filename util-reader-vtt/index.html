@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advanced VTT Reader</title>
+    <style>
+        :root { --bg: #f8f9fa; --card: #ffffff; --text: #212529; --accent: #007bff; }
+        [data-theme="dark"] { --bg: #121212; --card: #1e1e1e; --text: #e0e0e0; --accent: #379aff; }
+        
+        body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: var(--text); padding: 2rem; transition: 0.3s; }
+        .container { max-width: 850px; margin: auto; }
+        
+        /* UI Elements */
+        .controls { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; align-items: center; }
+        button, label { padding: 8px 16px; border-radius: 6px; border: 1px solid var(--accent); background: transparent; color: var(--accent); cursor: pointer; font-weight: 500; }
+        button.active { background: var(--accent); color: white; }
+        
+        #drop-zone { border: 2px dashed var(--accent); padding: 40px; text-align: center; background: var(--card); border-radius: 12px; margin-bottom: 20px; }
+        
+        /* View Modes */
+        .view-section { display: none; line-height: 1.6; }
+        .view-section.active { display: block; }
+        
+        /* Paragraph Mode Styles */
+        .para-view p { margin-bottom: 1.5rem; font-size: 1.15rem; background: var(--card); padding: 1.5rem; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+        
+        /* Fragment Mode Styles */
+        .fragment { display: flex; gap: 15px; margin-bottom: 10px; padding: 10px; background: var(--card); border-radius: 6px; font-size: 0.95rem; }
+        .timestamp { color: var(--accent); font-family: monospace; min-width: 160px; }
+
+        /* Raw Text Mode */
+        textarea { width: 100%; height: 400px; padding: 15px; border-radius: 8px; background: var(--card); color: var(--text); border: 1px solid #ccc; font-size: 1rem; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div style="display:flex; justify-content: space-between; align-items: center;">
+            <h1>VTT Reader</h1>
+            <button onclick="toggleTheme()">🌓 Dark Mode</button>
+        </div>
+
+        <div id="drop-zone" onclick="document.getElementById('file-input').click()">
+            Drop your .vtt file here or click to select
+            <input type="file" id="file-input" accept=".vtt" style="display: none;">
+        </div>
+
+        <div class="controls" id="view-switcher" style="display:none;">
+            <span>View:</span>
+            <button onclick="switchView('paragraph')" id="btn-paragraph" class="active">Paragraphs</button>
+            <button onclick="switchView('fragments')" id="btn-fragments">Fragments</button>
+            <button onclick="switchView('raw')" id="btn-raw">Clean Text</button>
+        </div>
+
+        <div id="para-view" class="view-section para-view active"></div>
+        <div id="fragment-view" class="view-section"></div>
+        <div id="raw-view" class="view-section"><textarea id="raw-text" readonly></textarea></div>
+    </div>
+
+    <script>
+        let currentData = [];
+        const GAP_THRESHOLD = 2.0; // Seconds to consider a new paragraph
+
+        document.getElementById('file-input').onchange = e => {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (ev) => processVTT(ev.target.result);
+            reader.readAsText(file);
+        };
+
+        function timeToSeconds(t) {
+            const parts = t.split(':');
+            const s = parts.pop().split('.');
+            return parseInt(parts[0] || 0) * 3600 + parseInt(parts[1] || 0) * 60 + parseInt(s[0]) + parseFloat('0.' + s[1]);
+        }
+
+        function processVTT(content) {
+            const lines = content.split(/\r?\n/);
+            currentData = [];
+            let currentCue = null;
+
+            lines.forEach(line => {
+                const timeMatch = line.match(/(\d{2}:\d{2}:\d{2}\.\d{3}) --> (\d{2}:\d{2}:\d{2}\.\d{3})/);
+                if (timeMatch) {
+                    if (currentCue) currentData.push(currentCue);
+                    currentCue = { start: timeToSeconds(timeMatch[1]), end: timeToSeconds(timeMatch[2]), text: "", rawTime: timeMatch[0] };
+                } else if (currentCue && line.trim() && !line.match(/^\d+$/)) {
+                    currentCue.text += (currentCue.text ? " " : "") + line.trim();
+                }
+            });
+            if (currentCue) currentData.push(currentCue);
+
+            document.getElementById('view-switcher').style.display = 'flex';
+            renderAll();
+        }
+
+        function renderAll() {
+            // 1. Paragraph View (The Default)
+            const paraContainer = document.getElementById('para-view');
+            paraContainer.innerHTML = "";
+            let paragraphs = [];
+            let currentGroup = [];
+
+            currentData.forEach((cue, i) => {
+                if (i > 0 && (cue.start - currentData[i-1].end > GAP_THRESHOLD)) {
+                    paragraphs.push(currentGroup.join(" "));
+                    currentGroup = [cue.text];
+                } else {
+                    currentGroup.push(cue.text);
+                }
+            });
+            paragraphs.push(currentGroup.join(" "));
+            paragraphs.forEach(p => paraContainer.innerHTML += `<p>${p}</p>`);
+
+            // 2. Fragment View
+            const fragContainer = document.getElementById('fragment-view');
+            fragContainer.innerHTML = currentData.map(cue => `
+                <div class="fragment">
+                    <div class="timestamp">${cue.rawTime}</div>
+                    <div class="text">${cue.text}</div>
+                </div>
+            `).join("");
+
+            // 3. Raw Text View
+            document.getElementById('raw-text').value = paragraphs.join("\n\n");
+        }
+
+        function switchView(mode) {
+            document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.controls button').forEach(el => el.classList.remove('active'));
+            document.getElementById(mode + '-view').classList.add('active');
+            document.getElementById('btn-' + mode).classList.add('active');
+        }
+
+        function toggleTheme() {
+            const body = document.body;
+            body.getAttribute('data-theme') === 'dark' ? body.removeAttribute('data-theme') : body.setAttribute('data-theme', 'dark');
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>PWA Inbox Alert Generator</title>
+    <style>
+        body { font-family: sans-serif; max-width: 500px; margin: 2rem auto; padding: 1rem; border: 1px solid #ccc; border-radius: 8px; }
+        input, button { width: 100%; padding: 0.8rem; margin-top: 0.5rem; box-sizing: border-box; }
+        button { background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; }
+        .log { margin-top: 1rem; font-size: 0.9rem; color: #666; }
+    </style>
+</head>
+<body>
+
+    <h2>Alert Generator</h2>
+    
+    <label>PWA Inbox URL:</label>
+    <input type="text" id="inboxUrl" placeholder="https://pwainbox.com/" value="https://pwainbox.com/send/PoqoVtxOTBxiCT"  />
+    
+    <button onclick="sendAlert()">🚀 Send Random Alert</button>
+
+    <div id="status" class="log"></div>
+
+    <script>
+        async function sendAlert() {
+            const url = document.getElementById('inboxUrl').value;
+            const statusDiv = document.getElementById('status');
+            
+            if (!url) {
+                alert("Please paste your PWA Inbox URL first!");
+                return;
+            }
+
+            // 1. Generate Dummy Data
+            const alerts = [
+                { title: "System Overheat", body: "Server Rack #4 is at 85°C!" },
+                { title: "New Lead", body: "A new user just signed up for the beta." },
+                { title: "Build Success", body: "Production deployment finished in 42s." }
+            ];
+            const randomData = alerts[Math.floor(Math.random() * alerts.length)];
+
+            // 2. Send via Fetch API
+            statusDiv.innerText = "Sending...";
+            
+try {
+    const response = await fetch(url, {
+        method: 'POST',
+        mode: 'no-cors', // <--- This bypasses the preflight check
+        headers: {
+            'Content-Type': 'text/plain' // no-cors only allows simple content types
+        },
+        body: JSON.stringify({
+            title: randomData.title,
+            body: randomData.body
+        })
+    });
+
+    // In no-cors mode, the browser won't let you see response.ok
+    statusDiv.innerText = "🚀 Request sent (check your phone!)";
+} catch (err) {
+    statusDiv.innerText = `❌ Error: ${err.message}`;
+}
+
+}
+
+/*
+            try {
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        title: randomData.title,
+                        body: randomData.body,
+                        icon: "https://placeholder.com" // Optional icon
+                    })
+                });
+
+                if (response.ok) {
+                    statusDiv.innerText = `✅ Success: Sent "${randomData.title}"`;
+                } else {
+                    statusDiv.innerText = `❌ Error: ${response.statusText}`;
+                }
+            } catch (err) {
+                statusDiv.innerText = `❌ Network Error: ${err.message}`;
+            }
+        }
+*/
+    </script>
+</body>
+</html>
