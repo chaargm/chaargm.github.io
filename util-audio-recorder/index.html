@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Audio Segmenter - Fixed</title>
+    <style>
+        body { font-family: system-ui, -apple-system, sans-serif; display: flex; flex-direction: column; align-items: center; padding: 2rem; background: #f0f2f5; color: #1c1e21; }
+        .controls { margin-bottom: 2rem; display: flex; gap: 12px; }
+        button { padding: 12px 24px; cursor: pointer; border: none; border-radius: 8px; font-weight: 600; transition: transform 0.1s, background 0.2s; }
+        button:active { transform: scale(0.95); }
+        #startBtn { background: #00a400; color: white; }
+        #splitBtn { background: #007bff; color: white; display: none; }
+        #stopBtn { background: #fa3e3e; color: white; display: none; }
+        .segments-container { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 15px; width: 100%; max-width: 600px; }
+        .segment-card {
+            background: white; border: 1px solid #ddd; border-radius: 12px;
+            padding: 15px; cursor: pointer; text-align: center;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+        }
+        .segment-card:hover { background: #e7f3ff; border-color: #007bff; }
+        .status { margin-bottom: 1.5rem; font-size: 1.1rem; }
+        .recording-pulse { width: 10px; height: 10px; background: #fa3e3e; border-radius: 50%; display: inline-block; margin-right: 8px; animation: pulse 1s infinite; }
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.3; } 100% { opacity: 1; } }
+    </style>
+</head>
+<body>
+
+    <h1>Audio Segmenter</h1>
+    <div id="status" class="status">Ready to record</div>
+    
+    <div class="controls">
+        <button id="startBtn">Start Recording</button>
+        <button id="splitBtn">Split Segment</button>
+        <button id="stopBtn">Finish All</button>
+    </div>
+
+    <div class="segments-container" id="segmentsContainer"></div>
+
+    <script>
+        let mediaRecorder;
+        let stream;
+        let isFinalStop = false;
+
+        const startBtn = document.getElementById('startBtn');
+        const splitBtn = document.getElementById('splitBtn');
+        const stopBtn = document.getElementById('stopBtn');
+        const status = document.getElementById('status');
+        const container = document.getElementById('segmentsContainer');
+
+        async function initRecorder() {
+            if (!stream) {
+                stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            }
+            
+            mediaRecorder = new MediaRecorder(stream);
+            
+            mediaRecorder.ondataavailable = (event) => {
+                if (event.data.size > 0) {
+                    createSegmentUI(event.data);
+                }
+            };
+
+            mediaRecorder.onstop = () => {
+                // If we aren't finishing the whole session, immediately start a new recording
+                if (!isFinalStop) {
+                    mediaRecorder.start();
+                } else {
+                    // Only stop the actual mic hardware when the user hits "Finish All"
+                    stream.getTracks().forEach(track => track.stop());
+                    status.innerHTML = "Done! Click any segment to play.";
+                }
+            };
+
+            mediaRecorder.start();
+        }
+
+        startBtn.onclick = async () => {
+            try {
+                isFinalStop = false;
+                await initRecorder();
+                status.innerHTML = '<span class="recording-pulse"></span>Recording...';
+                startBtn.style.display = 'none';
+                splitBtn.style.display = 'inline-block';
+                stopBtn.style.display = 'inline-block';
+            } catch (err) {
+                status.innerText = "Error: Microhpone access is required.";
+            }
+        };
+
+        splitBtn.onclick = () => {
+            // Stopping the recorder triggers 'ondataavailable' with a valid, headered file.
+            mediaRecorder.stop();
+        };
+
+        stopBtn.onclick = () => {
+            isFinalStop = true;
+            mediaRecorder.stop();
+            splitBtn.style.display = 'none';
+            stopBtn.style.display = 'none';
+        };
+
+        function createSegmentUI(blob) {
+            const count = container.children.length + 1;
+            const card = document.createElement('div');
+            card.className = 'segment-card';
+            card.innerHTML = `<strong>Segment ${count}</strong><br>▶ Play`;
+            
+            const audioUrl = URL.createObjectURL(blob);
+            const audio = new Audio(audioUrl);
+
+            card.onclick = () => audio.play();
+            container.appendChild(card);
+        }
+    </script>
+</body>
+</html>
