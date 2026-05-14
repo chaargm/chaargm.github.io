@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Z's Guestbook</title>
+    <style>
+        :root { --primary: #6366f1; --bg: #eef2ff; --card: #ffffff; --text: #1e293b; --star: #f59e0b; }
+        body { font-family: 'Comic Sans MS', 'Segoe UI', cursive, sans-serif; background: var(--bg); color: var(--text); max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header-box { text-align: center; padding: 20px; position: relative; }
+        h1 { font-size: 3rem; color: var(--primary); margin: 10px 0; }
+        .card { background: var(--card); padding: 30px; border-radius: 30px; border: 4px solid var(--primary); box-shadow: 8px 8px 0px var(--primary); margin-bottom: 40px; }
+        label { display: flex; align-items: center; gap: 8px; font-weight: bold; font-size: 1.2rem; margin-bottom: 10px; }
+        input, textarea { width: 100%; padding: 15px; margin-bottom: 20px; border: 3px solid #cbd5e1; border-radius: 15px; font-size: 1.1rem; box-sizing: border-box; }
+        .star-rating { display: flex; flex-direction: row-reverse; justify-content: center; gap: 5px; margin-bottom: 20px; }
+        .star-rating input { display: none; }
+        .star-rating label { font-size: 50px; color: #e2e8f0; cursor: pointer; transition: 0.2s; }
+        .star-rating input:checked ~ label, .star-rating label:hover, .star-rating label:hover ~ label { color: var(--star); transform: scale(1.1); }
+        button { width: 100%; background: #22c55e; color: white; border: none; padding: 20px; border-radius: 50px; font-size: 1.5rem; font-weight: bold; cursor: pointer; box-shadow: 0 5px 0 #16a34a; transition: 0.1s; }
+        button:active { transform: translateY(3px); box-shadow: 0 2px 0 #16a34a; }
+        .comment-card { background: white; padding: 20px; border-radius: 20px; margin-bottom: 20px; border: 2px solid #ddd; position: relative; transition: opacity 0.3s; }
+        .comment-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px dashed #eee; margin-bottom: 10px; padding-bottom: 5px; }
+        .c-name { font-size: 1.2rem; color: var(--primary); }
+        .c-stars { color: var(--star); }
+        .pending { opacity: 0.6; border-style: dashed; }
+        .status-badge { font-size: 0.8rem; background: #eee; padding: 2px 8px; border-radius: 10px; }
+    </style>
+</head>
+<body>
+
+    <div class="header-box">
+        <h1>Z's Guestbook</h1>
+        <p>Leave a note for Z!</p>
+    </div>
+
+    <div class="card">
+        <form id="guestbookForm">
+            <label>Pick your stars:</label>
+            <div class="star-rating">
+                <input type="radio" id="star5" name="rating" value="5" required/><label for="star5">★</label>
+                <input type="radio" id="star4" name="rating" value="4"/><label for="star4">★</label>
+                <input type="radio" id="star3" name="rating" value="3"/><label for="star3">★</label>
+                <input type="radio" id="star2" name="rating" value="2"/><label for="star2">★</label>
+                <input type="radio" id="star1" name="rating" value="1"/><label for="star1">★</label>
+            </div>
+            <label>Your name:</label>
+            <input type="text" id="name" placeholder="Grandpa Abdullah" maxlength="20">
+            <label>Message:</label>
+            <textarea id="comment" rows="3" placeholder="I love this page!"></textarea>
+            <button type="submit" id="submitBtn">Click to Send! 🚀</button>
+        </form>
+    </div>
+
+    <h2>Messages for Z:</h2>
+    <div id="commentsList">Loading...</div>
+
+    <script>
+        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzohW0at17EzPXbH4oE8_rxIlBoAkxck-Jvo7Xmodhy1M7rOP55dccbxh8eQarawRxE/exec';
+        const NTFY_TOPIC = 'zafarb'; // ntfy.sh topic
+
+        async function fetchComments() {
+            console.log("Fetching latest comments from Sheet...");
+            try {
+                const res = await fetch(SCRIPT_URL);
+                const data = await res.json();
+                renderComments(data.reverse());
+            } catch (e) { console.error("Fetch failed:", e); }
+        }
+
+        function renderComments(comments, pendingItem = null) {
+            const list = document.getElementById('commentsList');
+            let html = "";
+            
+            if (pendingItem) {
+                html += createCommentHTML(pendingItem, true);
+            }
+
+            html += comments.map(row => createCommentHTML(row)).join('');
+            list.innerHTML = html || '<p>No messages yet!</p>';
+        }
+
+        function createCommentHTML(row, isPending = false) {
+            return `
+                <div class="comment-card ${isPending ? 'pending' : ''}">
+                    <div class="comment-header">
+                        <span class="c-name"><b>From:</b> ${row[0] || 'A friend'}</span>
+                        <span class="c-stars">${'★'.repeat(row[1])}</span>
+                    </div>
+                    <p>${row[2] || ''} ${isPending ? '<span class="status-badge">Sending...</span>' : ''}</p>
+                </div>`;
+        }
+
+        document.getElementById('guestbookForm').onsubmit = async (e) => {
+            e.preventDefault();
+            console.log("Form submitted. Starting optimistic update...");
+
+            const name = document.getElementById('name').value || 'A friend';
+            const rating = document.querySelector('input[name="rating"]:checked').value;
+            const comment = document.getElementById('comment').value;
+
+            // 1. Optimistic UI Update
+            const pendingData = [name, rating, comment];
+            const currentList = Array.from(document.querySelectorAll('.comment-card:not(.pending)')).map(c => [
+                c.querySelector('.c-name b').nextSibling.textContent.trim(),
+                c.querySelector('.c-stars').textContent.length,
+                c.querySelector('p').firstChild.textContent.trim()
+            ]);
+            renderComments(currentList, pendingData);
+
+            // 2. Send to ntfy.sh
+
+            fetch(`https://ntfy.sh/${NTFY_TOPIC}`, {
+                method: 'POST',
+                body: `${name} left a ${rating}-star review: "${comment}"`,
+                headers: { 'Title': "New Guestbook Entry!", 'Tags': 'star,rocket' }
+            }).then(() => console.log("ntfy.sh notification sent.")).catch(e => console.error("ntfy failed:", e));
+
+            // 3. Persist to Google Sheets
+            try {
+                const res = await fetch(SCRIPT_URL, { 
+                    method: 'POST', 
+                    body: JSON.stringify({ name, rating, comment }) 
+                });
+                console.log("Data persisted to Sheet.");
+                e.target.reset();
+                fetchComments(); // Refresh to confirm state
+            } catch (e) {
+                console.error("Persistence failed. Rolling back optimistic UI...", e);
+                fetchComments(); // Rollback to actual server state
+            }
+        };
+
+        fetchComments();
+    </script>
+</body>
+</html>
