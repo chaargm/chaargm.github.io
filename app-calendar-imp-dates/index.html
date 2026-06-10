@@ -681,9 +681,39 @@ header {
     background: rgba(255, 240, 242, 0.3);
 }
 
+
+
+/* ==========================================================================
+   COSMETIC ICON SCALING OVERRIDES
+   ========================================================================== */
+
+/* Elevate base emoji font size footprint globally for desktop viewports */
+.event-emoji {
+    font-size: 1.6em !important;
+    line-height: 1.2;
+    display: inline-block;
+}
+
+/* Maintain high-visibility proportions on compact smartphone viewports */
+@media (max-width: 768px) {
+    .event-emoji {
+        font-size: 1.5em !important;
+    }
+    
+    [data-theme="elderly"] .event-emoji {
+        font-size: 1.8em !important;
+    }
+    
+    .event-sticker {
+        height: auto !important;
+        min-height: 28px;
+    }
+}
+
     </style>
 </head>
-<body>
+<!-- Defaulting the production page load experience directly to Grandparent Mode -->
+<body data-theme="elderly">
 
     <div class="container">
         <header>
@@ -698,45 +728,7 @@ header {
                 </svg>
                 <span>FamilyCircles</span>
             </div>
-            <button class="view-toggle-btn" id="viewToggle" onclick="toggleViewMode()">
-                <!-- Accessible responsive user theme toggle icon -->
-                <svg class="toggle-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-                    <circle cx="9" cy="7" r="4"></circle>
-                    <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
-                    <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
-                </svg>
-                <span id="toggleText">Switch to Grandparent Mode</span>
-            </button>
         </header>
-
-
-        <!-- Collapsible Configuration Dashboard -->
-        <!-- <div id="configDrawer" style="background: var(--card-bg); border-radius: var(--border-radius); padding: 30px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); margin-bottom: 30px;">
-            <h3 style="margin-bottom: 10px; font-size: 1.2em;">Data Import Engine</h3>
-            <p style="margin-bottom: 15px; font-size: 0.85em; color: #718096;">
-                Paste your family tree registry lines below (Format: Name, DOB, DOD):
-            </p>
-            
-            <textarea id="csvInputArea" style="width: 100%; height: 120px; padding: 15px; border-radius: 12px; border: 2px solid #cbd5e1; font-family: monospace; font-size: 14px; margin-bottom: 15px; resize: vertical;" placeholder="Name,DOB,DOD
-John Doe,10 JUN 2003,
-Jane Doe,22 MAY 2006,"></textarea>
-            
-            <button onclick="UIManager.importFromTextBox()" style="background: var(--secondary); color: white; border: none; padding: 12px 25px; border-radius: 12px; cursor: pointer; font-weight: bold; font-size: 0.9em;">
-                Update Calendar Matrix
-            </button>
-
-
-            <div style="margin-top: 20px; padding-top: 20px; border-top: 1px dashed #cbd5e1; display: flex; gap: 15px; align-items: center; flex-wrap: wrap;">
-                <input type="password" id="passphraseToken" placeholder="Set One-Time Passphrase" style="padding: 12px; border-radius: 12px; border: 2px solid #cbd5e1; min-width: 250px; font-size: 14px;">
-                <button onclick="UIManager.encryptAndSaveToCache()" style="background: var(--elderly-view); color: white; border: none; padding: 12px 25px; border-radius: 12px; cursor: pointer; font-weight: bold; font-size: 0.9em;">
-                    Lock & Encrypt into LocalStorage
-                </button>
-            </div>
-
-        </div> -->
-
-
 
         <!-- Dynamic View Anchors -->
         <main class="calendar-wrapper">
@@ -755,20 +747,6 @@ Jane Doe,22 MAY 2006,"></textarea>
             </div>
             
             <!-- Weekday Columns Header with Responsive Adaptive Labels -->
-            <div class="weekdays-header">
-                <div data-long="Sunday" data-short="S"></div>
-                <div data-long="Monday" data-short="M"></div>
-                <div data-long="Tuesday" data-short="T"></div>
-                <div data-long="Wednesday" data-short="W"></div>
-                <div data-long="Thursday" data-short="T"></div>
-                <div data-long="Friday" data-short="F"></div>
-                <div data-long="Saturday" data-short="S"></div>
-            </div>
-
-            <div class="days-grid" id="daysGrid"></div>
-
-
-                        <!-- Weekday Columns Header with Responsive Adaptive Labels -->
             <div class="weekdays-header">
                 <div data-long="Sunday" data-short="S"></div>
                 <div data-long="Monday" data-short="M"></div>
@@ -803,9 +781,38 @@ Jane Doe,22 MAY 2006,"></textarea>
                     <div class="feed-list-content" id="nextFeedList"></div>
                 </div>
             </div>
-
         </main>
 
+        <!-- Centered, semantic footer for lower cognitive load on utility operations -->
+        <footer class="calendar-footer" style="margin-top: 40px; padding: 20px 0; display: flex; justify-content: center; width: 100%;">
+            <button class="view-toggle-btn" id="viewToggle" onclick="toggleViewMode()">
+                <!-- Accessible responsive user theme toggle icon -->
+                <svg class="toggle-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                    <circle cx="9" cy="7" r="4"></circle>
+                    <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                    <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                </svg>
+                <span id="toggleText">Switch to Standard Mode</span>
+            </button>
+        </footer>
+    </div>
+
+    <!-- Slide-Up Bottom Sheet Detail Drawer Frame for Grandparents & Kids -->
+    <div id="familyDetailOverlay" class="detail-sheet-overlay" onclick="FamilyInteractionController.closeDetailSheet()">
+        <div class="detail-sheet-card" onclick="event.stopPropagation()">
+            <div class="detail-sheet-pull-bar"></div>
+            <header class="detail-sheet-header">
+                <h4 id="modalDateLabel">Selected Date</h4>
+                <button class="detail-close-btn" onclick="FamilyInteractionController.closeDetailSheet()" aria-label="Close details">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                </button>
+            </header>
+            <div class="detail-sheet-content" id="modalEventContent"></div>
+        </div>
     </div>
 
     <script>
@@ -928,7 +935,7 @@ const FamilyDataEngine = {
     }
 };
 
-let currentTheme = 'young';
+let currentTheme = 'elderly';
 function toggleViewMode() {
     const body = document.body;
     const txt = document.getElementById('toggleText');
@@ -1379,8 +1386,6 @@ FamilyEngineTests.testVisualLayoutGeometry = function() {
                 FamilyEngineTests.runSuite();
             }
 
-
-            
             let decryptedData = null;
 
             // Rule 1: Check if the browser already has the password saved in memory cache
@@ -1415,66 +1420,5 @@ FamilyEngineTests.testVisualLayoutGeometry = function() {
             console.log("System initialization completed successfully.");
         };
     </script>
-
-        <!-- Slide-Up Bottom Sheet Detail Drawer Frame for Grandparents & Kids -->
-    <div id="familyDetailOverlay" class="detail-sheet-overlay" onclick="FamilyInteractionController.closeDetailSheet()">
-        <div class="detail-sheet-card" onclick="event.stopPropagation()">
-            <div class="detail-sheet-pull-bar"></div>
-            <header class="detail-sheet-header">
-                <h4 id="modalDateLabel">Selected Date</h4>
-                <button class="detail-close-btn" onclick="FamilyInteractionController.closeDetailSheet()" aria-label="Close details">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
-                        <line x1="18" y1="6" x2="6" y2="18"></line>
-                        <line x1="6" y1="6" x2="18" y2="18"></line>
-                    </svg>
-                </button>
-            </header>
-            <div class="detail-sheet-content" id="modalEventContent">
-                <!-- Dynamic High-Visibility Text Nodes Streamed Here By Click Events -->
-            </div>
-        </div>
-    </div>
-
-    <script>
-        /**
-         * MODULE 5: FamilyInteractionController
-         * Responsibility: Intercept grid card touches to drive accessible full-screen detail panels
-         */
-        const FamilyInteractionController = {
-            openDetailSheet(cardElement) {
-                const summaryText = cardElement.getAttribute('data-event-summary');
-                const dateString = cardElement.getAttribute('data-date-string');
-                
-                const overlay = document.getElementById('familyDetailOverlay');
-                const dateLabel = document.getElementById('modalDateLabel');
-                const contentArea = document.getElementById('modalEventContent');
-
-                if (!overlay || !dateLabel || !contentArea) return;
-
-                // Explode collected event tokens into clean, large, high-visibility block entries
-                dateLabel.innerText = dateString;
-                contentArea.innerHTML = "";
-
-                const items = summaryText.split(' | ');
-                items.forEach(item => {
-                    const block = document.createElement('div');
-                    block.classList.add('modal-event-block');
-                    block.innerText = item;
-                    contentArea.appendChild(block);
-                });
-
-                // Engage active class animation targets inside style stylesheets
-                overlay.classList.add('is-active');
-                document.body.style.overflow = 'hidden'; // Freeze scrolling viewport leaks
-            },
-
-            closeDetailSheet() {
-                const overlay = document.getElementById('familyDetailOverlay');
-                if (overlay) overlay.classList.remove('is-active');
-                document.body.style.overflow = ''; // Unlock scrolling layers
-            }
-        };
-    </script>
-
 </body>
 </html>
