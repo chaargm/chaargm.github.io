@@ -3,165 +3,514 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Family Calendar (Secure Viewer)</title>
+    <title>Family Circles Calendar Sandbox</title>
     <style>
         :root {
-            --bg: #ffffff; --text: #1a1a1a; --border: #e2e8f0; --accent: #3b82f6;
-            --today-bg: #eff6ff; --secondary: #64748b;
-            --c-bd: #f472b6; --c-anniv: #8b5cf6; --c-death: #64748b;
-            --c-school: #f59e0b; --c-work: #10b981; --c-evt: #3b82f6; --c-food: #ef4444;
-        }
-        body { font-family: system-ui, sans-serif; margin: 0; padding: 20px; background: #f8fafc; color: var(--text); }
-        .container { max-width: 1100px; margin: 0 auto; display: none; gap: 1.5rem; }
-        .sidebar-calendars { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; opacity: 0.9; }
-        .calendar-card { border: 1px solid var(--border); border-radius: 12px; padding: 1rem; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
-        .calendar-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; font-weight: bold; }
-        .grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 1px; background: var(--border); border: 1px solid var(--border); border-radius: 6px; overflow: hidden; }
-        .day { background: #fff; min-height: 65px; padding: 5px; position: relative; }
-        .day-header { font-weight: bold; text-align: center; font-size: 0.7rem; background: #f1f5f9; padding: 8px 0; color: #64748b; text-transform: uppercase; }
-        .day.today { background: var(--today-bg); box-shadow: inset 0 0 0 2px var(--accent); }
-        .day.other-month { background: #fafafa; color: #cbd5e1; }
-        .event-item { font-size: 0.65rem; line-height: 1.2; margin-bottom: 2px; padding: 2px 4px; border-radius: 3px; display: flex; align-items: center; gap: 3px; }
-        .type-birthday { background: #fdf2f8; color: var(--c-bd); }
-        .type-anniversary { background: #f5f3ff; color: var(--c-anniv); }
-        .type-death { background: #f1f5f9; color: var(--c-death); }
-        .type-school { background: #fffbeb; color: var(--c-school); }
-        .type-work { background: #ecfdf5; color: var(--c-work); }
-        .type-event { background: #eff6ff; color: var(--c-evt); }
-        .type-food { background: #fef2f2; color: var(--c-food); }
-        
-        #auth-overlay { position: fixed; inset: 0; background: #f8fafc; display: flex; align-items: center; justify-content: center; z-index: 100; }
-        .auth-card { background: white; padding: 2rem; border-radius: 12px; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1); text-align: center; border: 1px solid var(--border); }
-        input { padding: 12px; border: 1px solid var(--border); border-radius: 8px; width: 220px; font-size: 1rem; outline: none; transition: border 0.2s; }
-        input:focus { border-color: var(--accent); }
-        button { padding: 12px 24px; background: var(--accent); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; }
-        nav button { background: #fff; border: 1px solid var(--border); padding: 5px 12px; color: var(--text); }
+    --bg-main: #f0f7f4;
+    --card-bg: #ffffff;
+    --text-main: #2d3748;
+    --primary: #ff6b6b;
+    --secondary: #4ecdc4;
+    --accent: #ffe66d;
+    --elderly-view: #6c5ce7;
+    --border-radius: 24px;
+    --font-size-base: 18px;
+    --grid-gap: 15px;
+    --min-box-height: 100px;
+}
+
+/* Grandparent Mode Adaptive Overrides */
+[data-theme="elderly"] {
+    --bg-main: #fffdf6;
+    --text-main: #1a1a1a;
+    --font-size-base: 24px;
+    --border-radius: 32px;
+    --grid-gap: 25px;
+    --min-box-height: 150px;
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+body {
+    background-color: var(--bg-main);
+    color: var(--text-main);
+    font-size: var(--font-size-base);
+    padding: 20px;
+    transition: all 0.2s ease-in-out;
+}
+
+.container {
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: var(--card-bg);
+    padding: 20px 40px;
+    border-radius: var(--border-radius);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+    margin-bottom: 30px;
+}
+
+.logo-area {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    font-weight: 800;
+    font-size: 1.5em;
+    color: var(--primary);
+}
+
+.view-toggle-btn {
+    background: var(--elderly-view);
+    color: white;
+    border: none;
+    padding: 15px 30px;
+    border-radius: 50px;
+    font-size: 0.9em;
+    font-weight: bold;
+    cursor: pointer;
+    box-shadow: 0 5px 15px rgba(108, 92, 231, 0.4);
+}
+
+.calendar-wrapper {
+    background: var(--card-bg);
+    border-radius: var(--border-radius);
+    padding: 40px;
+    box-shadow: 0 15px 40px rgba(0,0,0,0.05);
+}
+
+.calendar-header h2 {
+    font-size: 2em;
+    font-weight: 800;
+    margin-bottom: 25px;
+}
+
+.days-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: var(--grid-gap);
+}
+
+.day-card {
+    background: #f7fafc;
+    border: 4px solid transparent;
+    border-radius: var(--border-radius);
+    padding: 15px;
+    min-height: var(--min-box-height);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.day-number {
+    font-weight: 800;
+    font-size: 1.2em;
+}
+
+.event-sticker {
+    background: var(--accent);
+    padding: 6px 12px;
+    border-radius: 30px;
+    font-size: 0.75em;
+    font-weight: bold;
+    margin-top: 5px;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+}
+
+[data-theme="elderly"] .event-sticker {
+    font-size: 0.85em;
+    padding: 10px 16px;
+}
+
     </style>
 </head>
 <body>
 
-    <div id="auth-overlay">
-        <div class="auth-card">
-            <h2 style="margin-top:0">🔒 Private Calendar</h2>
-            <div style="display:flex; gap:8px; justify-content:center">
-                <input type="password" id="pass" placeholder="Enter password..." onkeydown="if(event.key==='Enter') unlock()">
-                <button onclick="unlock()">Unlock</button>
+    <div class="container">
+        <header>
+            <div class="logo-area">
+                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                    <line x1="16" y1="2" x2="16" y2="6"></line>
+                    <line x1="8" y1="2" x2="8" y2="6"></line>
+                    <line x1="3" y1="10" x2="21" y2="10"></line>
+                </path></svg>
+                <span>FamilyCircles</span>
             </div>
-            <p id="err" style="color:#ef4444; font-size:0.85rem; margin-top:1rem; height:1em"></p>
-        </div>
-    </div>
-
-    <div class="container" id="app">
-        <header style="display:flex; justify-content:space-between; align-items:center;">
-            <h1>🗓️ Family Calendar</h1>
-            <div id="status" style="font-size:0.8rem; color:var(--secondary);">Viewing Encrypted Data</div>
+            <button class="view-toggle-btn" id="viewToggle" onclick="toggleViewMode()">
+                <span id="toggleText">Switch to Grandparent Mode</span>
+            </button>
         </header>
 
-        <main id="main-cal-anchor"></main>
-        <section class="sidebar-calendars">
-            <div id="prev-cal-anchor"></div>
-            <div id="next-cal-anchor"></div>
-        </section>
+
+        <!-- Collapsible Configuration Dashboard -->
+        <!-- <div id="configDrawer" style="background: var(--card-bg); border-radius: var(--border-radius); padding: 30px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); margin-bottom: 30px;">
+            <h3 style="margin-bottom: 10px; font-size: 1.2em;">Data Import Engine</h3>
+            <p style="margin-bottom: 15px; font-size: 0.85em; color: #718096;">
+                Paste your family tree registry lines below (Format: Name, DOB, DOD):
+            </p>
+            
+            <textarea id="csvInputArea" style="width: 100%; height: 120px; padding: 15px; border-radius: 12px; border: 2px solid #cbd5e1; font-family: monospace; font-size: 14px; margin-bottom: 15px; resize: vertical;" placeholder="Name,DOB,DOD&#10;John Doe,10 JUN 2003,&#10;Jane Doe,22 MAY 2006,"></textarea>
+            
+            <button onclick="UIManager.importFromTextBox()" style="background: var(--secondary); color: white; border: none; padding: 12px 25px; border-radius: 12px; cursor: pointer; font-weight: bold; font-size: 0.9em;">
+                Update Calendar Matrix
+            </button>
+
+
+            <div style="margin-top: 20px; padding-top: 20px; border-top: 1px dashed #cbd5e1; display: flex; gap: 15px; align-items: center; flex-wrap: wrap;">
+                <input type="password" id="passphraseToken" placeholder="Set One-Time Passphrase" style="padding: 12px; border-radius: 12px; border: 2px solid #cbd5e1; min-width: 250px; font-size: 14px;">
+                <button onclick="UIManager.encryptAndSaveToCache()" style="background: var(--elderly-view); color: white; border: none; padding: 12px 25px; border-radius: 12px; cursor: pointer; font-weight: bold; font-size: 0.9em;">
+                    Lock & Encrypt into LocalStorage
+                </button>
+            </div>
+
+        </div> -->
+
+
+
+        <!-- Dynamic View Anchors -->
+        <main class="calendar-wrapper">
+            <div class="calendar-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px;">
+                <h2 id="monthYearDisplay">Loading Engine...</h2>
+                <div class="nav-controls">
+                    <button onclick="CalendarGridRenderer.changeMonth(-1)" style="padding: 10px 20px; font-weight: bold; border-radius: 8px; cursor: pointer; border: 1px solid #cbd5e1; background: #fff;">◀ Prev</button>
+                    <button onclick="CalendarGridRenderer.changeMonth(1)" style="padding: 10px 20px; font-weight: bold; border-radius: 8px; cursor: pointer; border: 1px solid #cbd5e1; background: #fff; margin-left: 10px;">Next ▶</button>
+                </div>
+            </div>
+            
+            <!-- Weekday Columns Header -->
+            <div class="weekdays-header" style="display: grid; grid-template-columns: repeat(7, 1fr); text-align: center; font-weight: bold; margin-bottom: 15px; color: #718096;">
+                <div>Sun</div><div>Mon</div><div>Tue</div><div>Wed</div><div>Thu</div><div>Fri</div><div>Sat</div>
+            </div>
+
+            <div class="days-grid" id="daysGrid"></div>
+        </main>
+
     </div>
 
     <script>
-        // PASTE YOUR GENERATED STRING FROM STEP 1 HERE
-        const VAULT_B64 = "eyJzIjpbMTYyLDM2LDE0NiwxMSwxNzIsMTg2LDE2MywyMzcsMTAzLDk3LDE4NywyMjcsMjEzLDE5OSwyOCwxNTJdLCJpIjpbMjAsNSwyNTEsMTI3LDIwOSwxNDUsNzAsMjEzLDEyMCw1NCw1MywxMzVdLCJkIjpbNzcsMTQ5LDEyLDU2LDM3LDEzMCw3NSw1OCwyNDksMjQ5LDI5LDI1Myw4OSwxNTYsMjEzLDExMCwxMTcsMTg3LDIxNyw4NiwxODQsMjUsMjA3LDIxNCw3LDY2LDkxLDEyMiwxOCwyMzksMTMyLDEzNSwxNjMsMTM5LDg5LDE2MiwxNTYsMTE5LDI0MSwxNjEsMTMwLDIwLDExMywyMyw3NywyNTAsMjIzLDIxNiwxMDUsOTMsMjQ5LDE1MywxNzUsODAsMTE2LDE4OCwxOSw0OCwxMTEsMCw4NCwyMTAsMTYyLDE4NiwxMiwxMzIsOTAsMTM2LDk4LDU4LDIzNiwxMzYsMTcyLDIyMyw0MCwxNzMsNDIsMTI2LDIwMiwyMjgsMjMsMjMyLDk5LDI0MCwyNTIsMjU0LDU5LDEzMyw3NSwxNzMsMjM1LDI0OCwxMTEsMTA0LDI0OCwxODEsMTkwLDI0MywzMSwxMDEsMTgwLDgzLDE0Niw0OSwxMzYsODMsMTMyLDIwNiwxNTksMTE0LDU0LDI1MSwzOCwyMzgsNDksMTQxLDI0MSw1NSwyMTgsMjE4LDEyMSwyMzgsMTU2LDEwMSwxMjcsMjIyLDEyMiw3NywyMTcsODQsMjA4LDczLDEwLDIwLDIwNywxNTAsMTcwLDQxLDE5NSwxMzAsOTEsMTcsMjUwLDExMCwxNywxMzEsMjI5LDIzOSwxMDYsMjQ5LDI3LDIxOCwxNzgsMTE4LDE0MiwxMDMsMTAsOTQsMjQyLDQ5LDExNCwyMTAsMTUzLDg4LDE1MywyMDQsMjMxLDEzMywyMjEsNSwxMjQsMTgzLDc2LDEwMCwxMzIsMTY1LDEyNyw0MCwxNTcsMTIxLDM3LDEyNSwxMTIsODEsODYsNTAsMTY3LDg3LDE2MywyOCwxNzcsMTQ1LDE5LDE3OCwxNiwxODEsMTk2LDE0NywyNDEsMTA5LDY0LDE2MCw3NywxMDgsMTQ4LDIzNSwxMDEsMTc2LDQsMjEzLDIyNyw3NiwxMTQsMiwzMywyMDgsMjIwLDk5LDE0LDEyOCwyNDgsMTEzLDE0NywxMjgsMTkzLDIzMiwyLDE4NCwyMzksMzEsMiw5MiwxOTAsMjA1LDc0LDE5MSwyOSwxMzksMTEwLDE1LDc2LDEwNSwxMjEsNDksNDIsMTc5LDc0LDE1MywxNzQsMTU5LDYxLDg5LDEwNCw0MywyMSwxOSwxNTksMjQsMyw0MiwxMCwyMjcsMTg0LDEyMywxNzMsNzcsMjAsMzksNTMsMjMwLDc2LDQ4LDI0OCwxNDYsMjgsMTc1LDM2LDE1Nyw3MSwxMCw4OSwxMzYsMTcyLDE3OCwyMDksOSwyNDcsMzcsMjQsMjQwLDMwLDE5MCw5MiwzNSwyMDUsMjMxLDQ2LDEwMywxNzAsMjM3LDIwMywxODQsMTI4LDIwMCw1MSwyNDQsMjM5LDIxLDExNyw0MSwzNywxMDMsMTAsODksMTQ1LDEzLDUzLDE0NCwxNzUsNDksMSwxMTUsMjA1LDc4LDExOSw1OSw5OCwyMzQsMTUwLDg4LDM4LDE2OSwxODAsMTUsMTc5LDEyOSwxMCwxMzIsMjQxLDE3NSwzMiw5MSwxOSwxOTksMjEyLDUsMTk2LDUsMTQwLDIwOCw1NiwyMDksMTQsMTEyLDg3LDI1MSw4NiwxODEsMCwyMjYsMSwxMTAsNTIsNyw2OCwxODcsMTk1LDE0NSw1Nyw1NywyMzQsMTA4LDI1MiwxMDgsMTg4LDcsMTg0LDQ1LDEyOSwyNCwyMDMsMTk3LDY2LDE2LDE5NywxMDgsMTk4LDI1NSwxOTMsMTE3LDE4MiwxNSwxNzAsNTEsMjMyLDcyLDEwMSwxOTIsMzQsMjM4LDExMCw3MSwxNjYsMjI3LDExOCwyMjMsNzYsMjEzLDU3LDYzLDgxLDIzMSwyMSwxNzcsMTc5LDc2LDE1NywxODgsMjMwLDEyMiwyMTMsMTAwLDQzLDIyNywyNDIsMTgyLDEyMywxMDksMTg5LDIwOCwxNzMsOCwxNDgsMjQ5LDE0NiwyMzQsMTYwLDE5OSwyNCw4MywyMywxNywyOCwxOSwzOSwyMjIsODcsMTYwLDIxMSw1OCw5NiwzMywxMDUsMjIsMTQsMjMzLDE1MSw5Niw3MSwxMDcsMjU0LDE3MSwyMzksMjU1LDU5LDUwLDE2NSwxNDksMjMsMjE5LDM1LDIyLDEyLDIyLDgwLDE0OSwxMjIsMTg3LDE0MCwxNTcsMTcsMTMzLDEzNyw0NywxMzksNzIsMjAxLDI0OSwxOCwxMDYsMjE4LDE2NSw2OCw5MSwyMzAsMTAxLDI0Miw4MiwxNzksMTExLDE4OSwxODYsMTM2LDIyNCwxNjMsMSwyMCwyMzcsMTY3LDIwNiwzNSwyNTEsMjQyLDIyNCwxNjYsMTIwLDQ0LDI0NSwyNywxNzYsMTA3LDIyMiwxODQsNzksMzgsNjQsMTY4LDU1LDE1MSw4OSwzMSwxODcsOTksMTA4LDIwNiwyMTAsMTYwLDQ4LDAsMTc2LDMzLDE2NSwyMzcsMjQ0LDE3OCwxNTksMywxNCw0MywxMDksNzgsMSwwLDk4LDMyLDIwNSwyMTAsNzUsMTIsNjksNDAsMTksMTUxLDE1MywyMDEsMTUsMTQ1LDIwOCwwLDE5MiwxNTEsMjM0LDQ0LDE0OSw4OCwxNjQsMTAzLDQsMTE1LDIyMCwxNDQsMTk3LDE0MCwyLDE0MiwyNDQsMTgyLDQzLDE1Myw5LDM3LDEyMCwxMDEsMjIxLDI0OCwxMzEsMTkyLDE3MCw0OSwzNSwyMTMsMjE2LDE1NiwxODgsMjAzLDE3MSwyNiwyNDUsMywyMjEsMjI3LDU1LDEwNSwxNDUsNCwyMDQsMSwzOSwyMDQsMTc1LDIwMSwyMDgsNCw2NSwxMTYsMTU1LDE4OCw0NywyMDYsMTcyLDE3MiwxNDcsOTMsNzIsMTI1LDE2OSwyMDIsMTgzLDc4LDkwLDExOSwxNTUsMTEzLDg3LDk0LDExMSw0MCwxMyw4MSw1MiwxOTMsMTk4LDQyLDIwNiwxOTgsMTQsMTA1LDE5NywyNTIsMjksMjIsMjQyLDEwNywxODksMTk4LDE2Miw1MCwxOTksMTA2LDE3MywxNDEsNTMsMjEsOTIsMTk5LDgxLDE4Nyw2OSwxNTAsMjcsMTg1LDI1MCwxMTksMTk2LDExMiwxNzQsMTM0LDMxLDIxMiwyMjEsMTc4LDIwNCwxMjQsMjU0LDUwLDIzNiwzNSw0MiwyMTQsMjAyLDE1MiwxNTcsOTcsMzgsMTU2LDIwMSwxODYsNzgsMTY3LDE4MywzOSwyMDAsMSw5NCwxMjIsMjAwLDEwNCwzOCwyNiwyNTUsMTQyLDEyMCwxMzQsODAsMjUsMTk3LDc1LDQxLDE1MCwzMCw4Niw0LDEzOSwxNTUsMjExLDEyOCwxNSwxMjQsMjM5LDEsNTgsMTY2LDQyLDE4Niw1NywxOSw5MCwxNzEsMzksMTczLDc3LDg2LDIyOSwzMywyMzYsODgsMTM4LDE4MSw3NiwxNiw5Miw1OSw2OSwxNjQsMjAxLDg0LDQxLDIwLDkzLDIwOCwyMTAsMTk5LDI0Myw5MSwxNTQsMjksMjIzLDQ4LDE3OCw3OCw4MSw0NywyNTUsMiwyMDcsMTMyLDIxNSw3MSwyMTQsMjM0LDk0LDk3LDk1LDMyLDEzNiw5MiwxODUsMjQsMjM2LDE3NywxNSwxNiwxODEsMTgxLDIxOSwxNzcsNTQsNjEsMTczLDE1LDEyNiwxNTAsNzUsMjQzLDc4LDEzOCw2MCwxNzMsODQsNiwyMjAsMzUsMjI0LDIwMCwxMjYsMjUxLDE4MSwxMjgsMzIsNzQsMTEzLDIwLDYsOSw5NiwyMyw0NywyMzksODIsNjIsODIsMTQ4LDEyOSwxNzgsODUsMTQwLDc4LDIwMywyMywyMTYsNzEsMTA4LDE1NiwxNDIsMjQsMTE2LDE2MywyMiw5OCwxODgsMjM3LDIzLDQwLDY4LDI1NCwxNzgsMTAyLDE5OCwyMDUsNTAsNzAsMTMyLDg2LDExMSwxNTcsMTgsMTcxLDcyLDQwLDU3LDE1MiwxNjMsMjQyLDEwMiw2MSwyLDc4LDEyMywyMDQsMTA2LDQ4LDIyNiw0MiwxMDAsMzksODYsNjMsMjIsNzMsOTUsMjMwLDE2OSw0MSwzNiwyMjgsMiwxMTcsMTM1LDEzLDEwMCwxMzksMjI1LDgyLDE1OCwxMDQsMTY3LDM4LDIxNiwxOTUsMTIwLDY1LDUxLDE2MCwyMjMsMTUzLDI0OCwyMzAsMTYwLDc2LDE5MywxMTcsOTcsMjgsMTQ5LDEwNywyNDYsMTI0LDIxOSwyNDUsMjMyLDMxLDI3LDIyLDM5LDE1OCwyMzgsMzcsMTY5LDk3LDE2OCwxMTcsMTY1LDU3LDE5NSwzNSwxNzUsMTY5LDIyMywxMjMsMTkyLDI5LDIzOCwxMzUsMjMwLDExMyw3OCwxMTUsMTYzLDk5LDE4MSw3MSwxNDgsMTMwLDIsMCwxMTcsODAsMTIyLDIwMCwxODksMTUsMzAsMTU3LDkzLDIwNSwyMTksMTA1LDE4MywzNywzMywxODUsMjA4LDEyOSwyMjYsMiwxMDgsMTkxLDc0LDI1NCw0MywyMTQsMjI0LDEyMywyMywzOCw2NSwxNTUsMTM5LDIxLDEzMiw0NiwxNTYsMCwyMzMsMTQsMTMwLDE1MiwxMTEsMTAyLDE4OCwxMjIsMTAxLDY3LDYyLDEsNjEsMjIsMjE1LDY4LDIxNSwxMTksMTA3LDE1MCw2NSw2MiwxMjIsNTUsMTkwLDEwNiwxODAsMTEzLDE3NSwyMjksMTI3LDMsMzUsMTA1LDc4LDIzNCwyMTIsMTE5LDIwMyw3NSw4NSwxMiwyMTEsMjM1LDU4LDE2NywyLDY5LDIzNiw3OCwyMTgsMjIwLDU2LDI0NCwxOTMsMTgsMTYxLDk3LDE3OCwxMzMsMTA3LDIzNSwxMywxNjAsMjA4LDcxLDE5MywyNTUsMjI2LDMxLDMwLDYsODQsNzIsMjQ4LDI0NywxOTQsMTI5LDUsODgsMjAsMTM3LDE5MSwxNzMsMTk1LDIzOCwyNDUsMjcsMTM0LDE4NCwxODEsNDksMTk0LDE2MiwyMzMsNjYsMjIzLDE0NiwyMTUsMjMwLDYxLDEyMSwyNDEsMTcxLDU3LDE4MCwxODgsNDksMTE1LDE1NCwyMjgsMjAyLDE4OSw0Nyw0NSwyNTEsMTI4LDE1MCw2OCwyMzgsNjEsMywxMywyMTEsMTcxLDk4LDE4MCwxNDYsMjgsMjA1LDIxLDExMSwxNCwxMjUsMTIsNzIsOTMsNzUsMTQ1LDQxLDE1OCwyMzAsMTUwLDY1LDEzNywxLDY0LDIzMSwxNTMsMjQwLDU2LDIzNywzOCwxMTUsNTYsNDQsMTQ1LDE5LDIxNiw4MiwxMjEsMTE2LDQzLDI1NSwxMDEsMTQ1LDI0NywxMTksMjI2LDE5MywxMzIsMjA0LDE5MywxMTcsMjQ3LDg3LDE4NCw3NiwyMjEsOTksOTIsMjIzLDE4NSwzMCwxNjksMTQzLDEyNiwyOSwxMjcsNTksMjAwLDE0NSw2OCwxMDIsMzIsMjQ4LDUyLDYwLDk3LDE4MCw4MCw1MSwyMDYsMjAsNDQsMTkzLDgyLDkzLDI4LDcwLDIwOCw5NSwzNiwxNzMsMTk5LDIyMiw1NCwyMDEsMTk2LDQ1LDE1MCwzNCwxMDksMTcxLDE2MywzMiw4NSwxNzMsMjAsMjMxLDE0MSwyNTMsMTA4LDEwNCwyMjAsMjMxLDExMCw3Miw0NCw1NCwyNTUsMjExLDExOCwxMDcsMTE5LDIzOCwxMTksNDUsNzYsMTE5LDgxLDIsMTY5LDQxLDIzLDIxNiwyMjAsMjI2LDI1MiwyNDgsMjQ0LDEyMSw2MywyNDgsMTM4LDIxNiw1NSwxMjIsMjE2LDI1MiwyNDQsMjM5LDIwOSwyMzMsMjAsMjQyLDMzLDIxOCwyNTAsMTY5LDI0NCwxMDQsNDksMjQ2LDEyNCw3LDE4MCw0Myw5OSwxMTMsNTYsMTM4LDk0LDExMywyNTMsMjQ0LDI0LDk3LDIxLDE2NywyMywxOTEsOTMsNzIsMTA3LDEzNCw5Niw3LDI1NCwxNzAsMTAzLDkwLDIxOCw5OSwxMTIsMTc0LDEyNiw2MiwyMzAsMTkyLDExNSwxMywyMjksMjQ2LDI1NCwxNzMsMjMsMTgxLDMxLDEzMywxOTgsMTgsMTUxLDIzMywyMzIsODYsMjYsNzUsMTYxLDIyMiw1NiwyMTEsMjIxLDIzMCwxMzAsMjI5LDgsMTkwLDIzMSwzOSw1OSwxMiw3MSwyMzIsMjA1LDIwMywxOTEsOTQsMjEwLDIxNSw1OCw3OSwyMjEsMTM0LDU5LDE0OCwxNjcsMTMzLDExOSwyMzcsMTA0LDUxLDIwOCwxODEsMTU3LDE1MywxMDksMjA5LDQ4LDE1LDEwMCw1MiwxMzcsMjE2LDExNCwxOCwwLDEwNiwyNCwyMDcsMjQ2LDEwNywxOTEsMTAxLDExOCwxNTUsMjAxLDQ0LDIxNSwyNDcsNzMsNDMsMTMsNjMsMTM0LDExOCwyMzMsMjU0LDExMCwxOTAsMjI0LDUxLDEzNiwyNTUsMTAzLDEzMiwxMzMsMjA4LDI1MywxMCwxNDcsMjUxLDExMCwyNDUsOTgsNjgsMTIwLDEyMSw2OCwxODEsMjM0LDczLDEyNywyMzcsMjAxLDEyOSw0NSwyMjEsMTQwLDUyLDEsMTc3LDIyNiwyNDIsMTY0LDExNywyNTQsMzcsMjI0LDE3MSwyMTAsODgsMjQxLDU1LDIyOCwxMjgsMTQsNTEsMzksMjksMTA3LDg3LDEzMCwyMTEsMjM1LDE3OSwyMzksNDgsODMsMTU5LDI0OSw3MCwxMTksNTgsMTI2LDI1MywyNDYsMjIzLDIxLDEwOSwxOTksMTM1LDY3LDY1LDU0LDE5MSwyMzYsMTQ5LDgyLDk0LDExNSwxMjUsMTIxLDEwMCwyMjAsMTY3LDIwOCwyMDIsNDYsMTg4LDE0NSwyMTMsMTY0LDExMyw0MiwyMzUsNzMsMTQ0LDYwLDE4MCw2LDgsNjYsNTIsMzksMTM5LDQsNzIsODQsMywyMzUsOTIsMTY1LDQsNTEsNzgsMTQ1LDE1MywxMTMsOTAsMjYsMjAsMTY2LDIzOSwxNjgsMTQsMTgsMjUxLDExOSwxMjcsMjM0LDUyLDYxLDExNiwyNDUsMTc4LDE4NiwxMDYsMTgxLDU5LDIwNCwxNTAsMTAzLDIyMCw5NCwxNDAsMzIsMjUzLDE1Myw5NCw4OSwzMywxNjcsMzIsNjAsMTE2LDc0LDIyOSwyNDAsMjUsMTU2LDc1LDExMywxNjEsNzUsMjQxLDE1OSw2MiwxODcsNjMsMTc0LDYyLDgyLDEzNywxMDcsMzYsMTc5LDIxNCwxMjcsMTExLDI4LDE0OSwyMTgsOTQsMTIwLDEwMSwyMzUsNjksMTg5LDE0NSwyMDgsMjIzLDE0NCwxNjYsNTIsMTAsOTQsNTQsMjE0LDE1NywxMjUsMzAsMTAxLDI0MSwxMSw0NCwxMDEsMTcxLDE4Niw2MiwxMDQsMjA0LDI2LDIwNiwxMjAsMjMsMTQwLDYwLDEzMiwyMjIsMTU3LDE4OCwxMzEsMjQyLDg3LDE1MCw4NSwzMywxMDAsMzcsMTI1LDgwLDEyNywxMjgsMTg4LDMsNTMsMjAwLDE1NywxNjksMjQ0LDIxNiw0OCw3MSw4NiwyMzAsMTkyLDkyLDEyMywzMywxNCwyMTcsNCwxMDAsMTA5LDE3MywyNTAsMTM2LDI0NiwyMDIsMTkzLDQ1LDE1OSwxOTUsMTM1LDEzOSw5NSwxOTUsODUsMjM4LDExNywyNDQsNzEsMTQyLDU5LDE0OSw1NiwxNjQsMTcxLDE2NSwxMjUsNDQsMjIzLDEyNywxNDIsMjQwLDE0LDI0Nyw5NywxNyw2MSwxMTQsMjUsNDksNSwxODksMjUsMjQ5LDg5LDc5LDEyMywxMTIsMTIsMjIwLDI0OCwyMDgsODAsMzgsMjI0LDExNCwyMTcsMjAzLDgwLDIyOCwxNywxNTUsMTE2LDE0Myw0MCwyMzYsNDMsMTkxLDExNiwyNTQsNDQsMTg3LDE0OCwzOCwyNywxMCwxNDAsMTEsMjQxLDE2MCw0NCwxMjQsNzQsMzUsMTQwLDQ5LDEwOCwxNjgsNDEsMTA0LDEwNCwyMjEsNSwxNSwxOTYsNzAsMjQyLDc0LDExNiw4OSw5NiwxOTAsMTE1LDc1LDEzMywzNCwxNzMsMjM4LDc4LDE0OSw3NCwyNTMsODQsMzIsMTkxLDk1LDE4NiwxMTksMjQ4LDQ4LDE2MiwxMTgsMjcsMjQ0LDMzLDE2LDc1LDE0Nyw0Nyw1NSw5OCwyMzYsNDAsNDYsMTQyLDIyNywyMzgsNjMsMjI0LDE5NywyNDQsMzUsNzgsMjE5LDI1NSwxOSwxOTYsNjcsMTg5LDE2OCwyNCwxNTksMTgwLDIxOCwxNzgsMjI3LDEwMSwxMTgsNjgsMjMsMjAwLDIwMSwyMDcsMjYsMjE1LDE1NSw1LDEzMywyMzMsNDksMjA2LDE1OSwyMDksNzEsNTcsMTQ0LDIyNiw5OSw3MSwyMjksMzUsMTU4LDIzMiwxNTAsMSw2OCwyNDksMTgyLDE0MywxMjksMjQsMTAsOTEsMTk4LDQsMTU0LDE4OCwyOSwyMzIsMjIsMjAzLDgyLDIzMCwxNTcsMTMxLDY0LDE5MiwyLDI4LDE1MywwLDk4LDE5Miw3OCw2Miw5MCwxODYsMjIxLDE5NiwxNDcsNDEsNjksMTQyLDEzNywzLDIyNSw2MSwxMTEsMTc4LDIzMSw5OCwxOTcsMTg5LDk4LDExOCw2MSwyMzksMTQwLDIwOCw4Niw0NiwyMSw0Miw0OSw0Nyw3Miw2MiwyMzQsMTEzLDEyNCw4MCwxMTksMTQ3LDQxLDI0MSwxMDYsMTY0LDIzLDIwMSw4NSwyMDEsMTY2LDMyLDcwLDExNywyMTQsMjM5LDIsNTIsMjIwLDEwNywxMTIsMjQwLDEyNywxNDAsMjIzLDI0MCwxNDEsMTQ2LDUzLDE2OSwxNDQsMjQ1LDIzLDIxNCwxNTAsMjAxLDEwNywxMTksODIsMjQ5LDE5OCwxMTYsMjEwLDExMiwxODcsMzcsMTgxLDE3OCwxMzEsMzQsMTEyLDc3LDc0LDE1MywxNTIsMjE2LDI2LDE3MywyNDQsMjExLDExMCwyMDAsMjI2LDEyNiwyMTksMjM4LDE3Nyw0MiwxMTEsMTM5LDI0MCwxMDgsODMsNjUsMTUzLDIzOCwxMzUsOTIsMTMzLDY2LDExNiwxMjAsMjE1LDQ0LDE2NiwxNTcsOTEsMzgsNzUsMTA5XX0="; 
+        // ==========================================
+// MODULE 1: FamilyDataEngine
+// Responsibility: Parse CSV strings and query family events
+// ==========================================
+const FamilyDataEngine = {
+    _records: [],
 
-        let state = { viewDate: new Date(), events: [] };
-        const CATEGORIES = {
-            birthday:    { icon: '🎂', keywords: ['BD'], annual: true },
-            anniversary: { icon: '💍', keywords: ['ANNIV', 'ANN', 'ANNIVERSARY'], annual: true },
-            death:       { icon: '🕯️', keywords: ['DEATH', 'DTH', 'DH', 'D'], annual: true },
-            school:      { icon: '🎓', keywords: ['SCHOOL', 'SKL', 'SCL'] },
-            work:        { icon: '💼', keywords: ['WORK', 'WRK'] },
-            food:        { icon: '🍲', keywords: ['DAWAT', 'RESTAURANT', 'DWT', 'RST', 'FOOD'] },
-            event:       { icon: '🌟', keywords: ['EVENTS', 'EVT'] }
-        };
+    MONTH_MAP: {
+        'JAN': 0, 'FEB': 1, 'MAR': 2, 'APR': 3, 'MAY': 4, 'JUN': 5,
+        'JUL': 6, 'AUG': 7, 'SEP': 8, 'OCT': 9, 'NOV': 10, 'DEC': 11
+    },
 
-        async function unlock() {
-            const pass = document.getElementById('pass').value;
-            const err = document.getElementById('err');
-            try {
-                const vault = JSON.parse(atob(VAULT_B64));
-                const salt = new Uint8Array(vault.s);
-                const iv = new Uint8Array(vault.i);
-                const ciphertext = new Uint8Array(vault.d);
-                
-                const enc = new TextEncoder();
-                const baseKey = await crypto.subtle.importKey('raw', enc.encode(pass), 'PBKDF2', false, ['deriveKey']);
-                const key = await crypto.subtle.deriveKey(
-                    { name: 'PBKDF2', salt, iterations: 100000, hash: 'SHA-256' },
-                    baseKey, { name: 'AES-GCM', length: 256 }, false, ['decrypt']
-                );
-                
-                const decrypted = await crypto.subtle.decrypt({ name: 'AES-GCM', iv }, key, ciphertext);
-                state.events = JSON.parse(new TextDecoder().decode(decrypted));
-                
-                document.getElementById('auth-overlay').style.display = 'none';
-                document.getElementById('app').style.display = 'grid';
-                UI.render();
-            } catch (e) {
-                err.innerText = "Access Denied: Incorrect Password";
+    parseCSV(csvText) {
+        if (!csvText) return [];
+        const lines = csvText.split('\n');
+        const parsedResults = [];
+
+        for (let i = 1; i < lines.length; i++) {
+            const line = lines[i].trim();
+            if (!line) continue;
+
+            // Split explicitly by comma boundaries
+            const columns = line.split(',');
+            if (columns.length < 2) continue;
+
+            const nameToken = columns[0].trim();
+            const dobToken = columns[1].trim();
+            const dodToken = columns[2] ? columns[2].trim() : "";
+
+            if (nameToken && dobToken) {
+                parsedResults.push({
+                    name: nameToken,
+                    dob: this._parseGedcomDate(dobToken),
+                    dod: dodToken ? this._parseGedcomDate(dodToken) : null
+                });
             }
         }
+        this._records = parsedResults;
+        return this._records;
+    },
 
-        const CalLogic = {
-            isMatch(e, y, m, d) {
-                const [ey, em, ed] = e.date.replace(/\//g, '-').split('-').map(Number);
-                if (CATEGORIES[e.type]?.annual) return em === (m+1) && ed === d;
-                return ey === y && em === (m+1) && ed === d;
-            },
-            getMonth(date) {
-                const y = date.getFullYear(), m = date.getMonth();
-                const first = new Date(y, m, 1).getDay();
-                const total = new Date(y, m + 1, 0).getDate();
-                const days = [];
-                for(let i=0; i<first; i++) days.push({ other: true, evts: [] });
-                for(let i=1; i<=total; i++) {
-                    days.push({ 
-                        num: i, 
-                        today: new Date().toDateString() === new Date(y, m, i).toDateString(),
-                        evts: state.events.filter(ev => this.isMatch(ev, y, m, i))
-                    });
+    _parseGedcomDate(dateStr) {
+        if (!dateStr) return null;
+        const cleanStr = dateStr.trim().toUpperCase();
+        
+        // Match spaces or tabs separating day, month, and year tokens
+        const parts = cleanStr.split(/\s+/);
+        if (parts.length !== 3) return null;
+
+        const day = parseInt(parts[0], 10);
+        const monthStr = parts[1];
+        const year = parseInt(parts[2], 10);
+        const monthIndex = this.MONTH_MAP[monthStr];
+
+        if (isNaN(day) || monthIndex === undefined || isNaN(year)) return null;
+        return { day, month: monthIndex, year };
+    },
+
+    getEventsForDay(day, monthIndex, currentViewingYear) {
+        const events = [];
+        this._records.forEach(person => {
+            if (person.dob && person.dob.day === day && person.dob.month === monthIndex) {
+                if (person.dod) {
+                    events.push({ type: 'MEMORIAL', label: `Remembrance: ${person.name}` });
+                } else {
+                    const age = currentViewingYear - person.dob.year;
+                    events.push({ type: 'BIRTHDAY', label: `${person.name} (${age})` });
                 }
-                return days;
             }
-        };
+        });
+        return events;
+    }
+};
 
-        const UI = {
-            render() {
-                const d = state.viewDate;
-                this.draw('main-cal-anchor', d, true);
-                this.draw('prev-cal-anchor', new Date(d.getFullYear(), d.getMonth()-1, 1), false);
-                this.draw('next-cal-anchor', new Date(d.getFullYear(), d.getMonth()+1, 1), false);
-            },
-            draw(anchor, date, isMain) {
-                const grid = CalLogic.getMonth(date);
-                const title = date.toLocaleString('default', { month: 'long', year: 'numeric' });
-                document.getElementById(anchor).innerHTML = `
-                    <div class="calendar-card">
-                        <div class="calendar-header">
-                            <span>${title}</span>
-                            ${isMain ? `<nav><button onclick="UI.shift(-1)">‹</button> <button onclick="UI.shift(1)">›</button></nav>` : ''}
-                        </div>
-                        <div class="grid">
-                            ${['S','M','T','W','T','F','S'].map(h => `<div class="day-header">${h}</div>`).join('')}
-                            ${grid.map(d => `
-                                <div class="day ${d.today ? 'today' : ''} ${d.other ? 'other-month' : ''}">
-                                    <div style="font-size:0.7rem">${d.num || ''}</div>
-                                    ${d.evts.map(e => `
-                                        <div class="event-item type-${e.type}" title="${e.title}">
-                                            <span>${CATEGORIES[e.type]?.icon || '•'}</span>
-                                            <span>${isMain ? e.title : ''}</span>
-                                        </div>
-                                    `).join('')}
-                                </div>
-                            `).join('')}
-                        </div>
-                    </div>`;
-            },
-            shift: (n) => { state.viewDate.setMonth(state.viewDate.getMonth()+n); UI.render(); }
+let currentTheme = 'young';
+function toggleViewMode() {
+    const body = document.body;
+    const txt = document.getElementById('toggleText');
+    if (currentTheme === 'young') {
+        body.setAttribute('data-theme', 'elderly');
+        currentTheme = 'elderly';
+        txt.innerText = "Switch to Standard Mode";
+    } else {
+        body.removeAttribute('data-theme');
+        currentTheme = 'young';
+        txt.innerText = "Switch to Grandparent Mode";
+    }
+}
+
+
+        // ==========================================
+// MODULE 3: CalendarGridRenderer
+// Responsibility: Draw calendar dates and inject data events
+// ==========================================
+const CalendarGridRenderer = {
+    // Start tracking the view state at a stable date (June 2026)
+    currentViewingDate: new Date(2026, 5, 10),
+
+
+    // ==========================================
+// MODULE 3: CalendarGridRenderer
+// Responsibility: Draw calendar dates and inject data events
+// ==========================================
+    // Start tracking the view state at a stable date (June 2026)
+    currentViewingDate: new Date(2026, 5, 10),
+
+    /**
+     * Shifts the current calendar view forward or backward by a number of months
+     * @param {number} direction (-1 for previous, 1 for next)
+     */
+    changeMonth(direction) {
+        const currentMonth = this.currentViewingDate.getMonth();
+        this.currentViewingDate.setMonth(currentMonth + direction);
+        this.render(); // Re-trigger grid calculations and redraw the UI
+    },
+
+    /**
+     * Main rendering loop to draw the grid and pull data events
+     */
+    render() {
+        const gridElement = document.getElementById('daysGrid');
+        const displayElement = document.getElementById('monthYearDisplay');
+        
+        if (!gridElement || !displayElement) return;
+
+        // Clear any old calendar boxes before redrawing
+        gridElement.innerHTML = '';
+
+        const year = this.currentViewingDate.getFullYear();
+        const month = this.currentViewingDate.getMonth();
+
+        // 1. Update the Month/Year banner text
+        const bannerOptions = { month: 'long', year: 'numeric' };
+        displayElement.innerText = this.currentViewingDate.toLocaleDateString('en-US', bannerOptions);
+
+        // 2. Calculate month grid metrics
+        const firstDayDayOfWeek = new Date(year, month, 1).getDay();
+        const totalDaysInMonth = new Date(year, month + 1, 0).getDate();
+        const totalDaysInPrevMonth = new Date(year, month, 0).getDate();
+
+        // 3. Draw Grayed-Out Days from the Previous Month
+        for (let x = firstDayDayOfWeek; x > 0; x--) {
+            const dayNum = totalDaysInPrevMonth - x + 1;
+            this._createDayCell(dayNum, true, month - 1, year, gridElement);
+        }
+
+        // 4. Draw Active Days for the Current Month
+        for (let i = 1; i <= totalDaysInMonth; i++) {
+            this._createDayCell(i, false, month, year, gridElement);
+        }
+
+        // 5. Pad the rest of the grid with Days from the Next Month
+        const currentSlotsFilled = gridElement.children.length;
+        const totalGridSlotsNeeded = currentSlotsFilled > 35 ? 42 : 35;
+        const remainingSlots = totalGridSlotsNeeded - currentSlotsFilled;
+        
+        for (let z = 1; z <= remainingSlots; z++) {
+            this._createDayCell(z, true, month + 1, year, gridElement);
+        }
+    },
+
+    /**
+     * Helper logic to build an individual date box
+     * @private
+     */
+    _createDayCell(dayNum, isOutsideMonth, monthIndex, yearNum, container) {
+        const card = document.createElement('div');
+        card.classList.add('day-card');
+        
+        if (isOutsideMonth) {
+            card.style.opacity = "0.3";
+        }
+
+        // Number Label
+        const numLabel = document.createElement('span');
+        numLabel.classList.add('day-number');
+        numLabel.innerText = dayNum;
+        card.appendChild(numLabel);
+
+        // Event Sticker Container
+        const stickerContainer = document.createElement('div');
+        stickerContainer.style.marginTop = "10px";
+
+        // Query our data engine for any family events matching this calendar box
+        const matches = FamilyDataEngine.getEventsForDay(dayNum, monthIndex, yearNum);
+        
+        matches.forEach(event => {
+            const sticker = document.createElement('div');
+            card.style.backgroundColor = "var(--accent)"; // Color block day card highlight
+            sticker.classList.add('event-sticker');
+            sticker.innerText = event.label;
+            stickerContainer.appendChild(sticker);
+        });
+
+        card.appendChild(stickerContainer);
+        container.appendChild(card);
+    }
+};
+
+
+        // ==========================================
+// MODULE 4: UIManager
+// Responsibility: Decode encrypted strings inside the browser
+// ==========================================
+const UIManager = {
+    /**
+     * Decodes the embedded data string using the password provided by the user.
+     */
+    _deobfuscateData(encodedStr, passwordKey) {
+        try {
+            // Decode Base64 string wrapper
+            let text = decodeURIComponent(escape(atob(encodedStr)));
+            let output = "";
+            
+            // Reversible XOR decoding calculation loop
+            for (let i = 0; i < text.length; i++) {
+                output += String.fromCharCode(text.charCodeAt(i) ^ passwordKey.charCodeAt(i % passwordKey.length));
+            }
+            return output;
+        } catch (e) {
+            return null; // Return null if decryption fails
+        }
+    }
+};
+
+
+        // ==========================================
+// MODULE 2: Automated Engine Regression Verification
+// Responsibility: Assert logic correctness during runtimes
+// ==========================================
+const FamilyEngineTests = {
+    runSuite() {
+        console.group("🚀 Running FamilyDataEngine Verification Tests...");
+        try {
+            this.testCSVParser();
+            this.testBirthdayAgeCalculation();
+            this.testTrailingCommaResilience();
+            console.log("✅ All data engine unit tests passed cleanly!");
+        } catch (error) {
+            console.error("❌ Test Suite Regression Detected:", error.message);
+        }
+        console.groupEnd();
+    },
+
+    assert(condition, message) {
+        if (!condition) throw new Error(`Assertion Failed: ${message}`);
+    },
+
+    testCSVParser() {
+        const testData = `Name,DOB,DOD\nxx xx,10 JUN 2003,\nzz zz,22 MAY 2006,`;
+        const records = FamilyDataEngine.parseCSV(testData);
+        this.assert(records.length === 2, "Should cleanly isolate two unique record rows.");
+        this.assert(records[0].name === "xx xx", "Name extraction normalization mismatch.");
+        this.assert(records[0].dob.month === 5, "June token matching index incorrect.");
+    },
+
+    testBirthdayAgeCalculation() {
+        const testData = `Name,DOB,DOD\nyy yy,15 AUG 2008,`;
+        FamilyDataEngine.parseCSV(testData);
+        const events = FamilyDataEngine.getEventsForDay(15, 7, 2026);
+        this.assert(events.length === 1, "Failed to match event output tracking indices.");
+        this.assert(events[0].label.includes("(18)"), "Dynamic age calculator engine offset error.");
+    },
+
+    testTrailingCommaResilience() {
+        const testData = `Name,DOB,DOD\nzz zz,22 MAY 2006,`;
+        const records = FamilyDataEngine.parseCSV(testData);
+        this.assert(records[0].name === "zz zz", "Failed to clear out whitespace blocks cleanly.");
+        this.assert(records[0].dob.day === 22, "Failed to process days properly when row ends on trailing comma.");
+    }
+};
+
+FamilyEngineTests.runSuite();
+
+
+        // This placeholder holds the encrypted string compiled by Python
+        const EMBEDDED_VAULT = "f1FAVgF8fHcddGJ3J3lVUFRWTBNrWUddWF1MHxwIE39kfg0BHQgAGTtxREBFWRNmWFRJWlxNUhkDAg1+bGETBwEAGx8neV5cX1ENYExcWkQdARgTbG10FQMAHQsBMnlAR1VfWkwYYFRVWVwfHA8TdGR3DQEdCQEZO31CW0xVXlBVEGVGV1laU1AQflJJUUIZAAENeXh2EwcBAh0fJ3ZcQENRRRNjV0ZHUFgBAhUYdXBzEB8DHwofP39RVFZIVVIVc1VKRkAUAQ0RdmhxDQkKAQgcJ35CUFJYXFVJE2pQXEBCVQ1yRVVWUR0CDX1ibhMECAQcHyd2RkZDUVlbDX5SQVhdTB8cCBN6cmQNAhQPBxk7Y0xfSF1eVBF5T0FMUFpYHQEcE2xoYRUACR4DATJ5VF9RTxNgV1tUXF1MVw1xUUdQWEReDUtSVx0BHRNjd2UVAAkfAgEyYF1QXUhWQFkTd1RXWF4BCQMVfHF/ExwBBgUdOntSXl1WWFAQZFFfWVtcXBwcAg1yZnsRARQGHBQ5e1BaQFINa1tUV1kBAg11cmcRARQGGBQ5eF5YTF5AXVcVeF1ZW0RZSRkACA1gaGgTBAgFGh8ndVxdUF1AVkkYekZcUURfAQkDFXBlahMcAQYMHTp3UkVdVkcRcgNyAQwTZnRgDQIUAAQZO2NYXkxBSlQRdkxHRVFeVB0BFRNsbXQVAAkVCwEyYFRQVERSDWtbVFkcFBNneX0VAAkUCwEyYFRDUUUTa1lHXFxRAQEVGHl0fxAcChQNHz9iWExbQ1lSTxFxXl5MFAIMEWNoYw0JCgMJHCdgVF1XFXBKQFJZUEZZXVFFE29dSlRTUUNaAQkCFXtxYxMcAQcBHTp+SkhcE39QWExdSlFBFXNVVFJPWV1cHQIYE2t9cRUACR4EATJgTFRUDXJfUVVAXVxMWw16VkxQUkxdRBQCDBF9bGENCQoGCRwnYFRdVxV6WFhXX1lHQF1cTFsNelZMUFJMXUQUBBV+c3kTHAEHBB06fkpIXFIVa1VIXUxMWxVhUV5bTBQBAhF+YmUNCQoBBhwnYFRdVxViWV9SR01XUVheDXFIQVJXUF5EHx4YcmB2EBwKGQEfP2JJSFdMGGFUWVFZW1hWXVxCUQECGhh1cHMQHAoYCR8/YklIVw1rW1pEW0xHRU1fWVBYDXFIQVJXUF5EHx8JE3hwaQ0CFA0BGTtjVFZJGH5RHxBlUktdVk9EXEFSRRhxUEhRT1JDUR8HBhBgcn8YAgwEBAE5fkFWURFqTFFIXVtAXVxMWw16VkxQUkxdRBQBAhF6bH0NCQoCAxwnYANrHX9QUkhWQxhxUEhRT1JDUR8EARBnZmEYAgwGAwE5fkFWURFqWFFMUUEVc1VUUk9ZXVwdAh8Tfn1jFQAJGgcBMmBMVFQNaUxeUkcRckhKTFpSW1gcHwINdnxjEQEUBBQUOXheWExeQF1XFXhCS1JDFAIMEXZocQ0JCg0FHCd1TFBeXFVRDXFIX0ZYHQEdE2xoYRUDAB8CATJgTFRUTBN+WUFUEXJEQUdRQBkDBQ15eHYTBAgJHB8ndVxdUF1AVkkYcldVRUETZ1lfUFRcAR8fDxN/cH4NAhQBAz95UUBJTBh+QEtRQF5EVB8GARBsY38YAQUDAgE5WFZYW15HQxNmUFJbHQcNYGhoEwcBAhkfJ29SRlRVQBNsUF5QVRxscXkYAhV7ZWETHAELGQ==";
+
+        window.onload = function() {
+            let decryptedData = null;
+
+            // Rule 1: Check if the browser already has the password saved in memory cache
+            let savedPassword = localStorage.getItem('_family_calendar_cached_pass');
+
+            if (savedPassword) {
+                // Try unlocking automatically with the cached password
+                decryptedData = UIManager._deobfuscateData(EMBEDDED_VAULT, savedPassword);
+            }
+
+            // Rule 2: If no cache exists or the password changed, prompt the user once
+            if (!decryptedData) {
+                const userAttempt = prompt("🔒 Enter the Family Secret Password to view the calendar:");
+                if (userAttempt) {
+                    decryptedData = UIManager._deobfuscateData(EMBEDDED_VAULT, userAttempt);
+                    
+                    if (decryptedData && decryptedData.startsWith("Name,DOB,DOD")) {
+                        // Success! Save password to memory cache so it never prompts again
+                        localStorage.setItem('_family_calendar_cached_pass', userAttempt);
+                    } else {
+                        alert("❌ Incorrect password. Access Denied.");
+                        return;
+                    }
+                } else {
+                    return; // Canceled
+                }
+            }
+
+            // Pass the decrypted data directly to the calendar rendering engine
+            FamilyDataEngine.parseCSV(decryptedData);
+            CalendarGridRenderer.render();
+            console.log("System initialization completed successfully.");
         };
     </script>
 </body>
