@@ -133,6 +133,542 @@ header {
     padding: 10px 16px;
 }
 
+
+/* ==========================================================================
+   MOBILE DESIGN ENGINE & RESPONSIVE BREAKPOINTS
+   ========================================================================== */
+
+/* Universal CSS pseudo-element injection for layout day strings */
+.weekdays-header > div::after {
+    content: attr(data-long);
+}
+
+.nav-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 20px;
+    font-weight: bold;
+    border-radius: 12px;
+    cursor: pointer;
+    border: 1px solid #cbd5e1;
+    background: #ffffff;
+    transition: background 0.15s ease;
+}
+
+.nav-btn:hover {
+    background: #f8fafc;
+}
+
+.header-icon, .toggle-icon {
+    flex-shrink: 0;
+}
+
+/* Fluid Scaler for Mobile Screens */
+@media (max-width: 768px) {
+    :root {
+        --font-size-base: 14px;
+        --grid-gap: 6px;
+        --min-box-height: 70px;
+        --border-radius: 14px;
+    }
+
+    [data-theme="elderly"] {
+        --font-size-base: 18px;
+        --grid-gap: 10px;
+        --min-box-height: 105px;
+        --border-radius: 18px;
+    }
+
+    body {
+        padding: 8px;
+    }
+
+    header {
+        flex-direction: column;
+        gap: 15px;
+        padding: 15px;
+        text-align: center;
+    }
+
+    .view-toggle-btn {
+        width: 100%;
+        justify-content: center;
+        padding: 12px 20px;
+    }
+
+    .calendar-wrapper {
+        padding: 15px;
+    }
+
+    .calendar-header {
+        flex-direction: column;
+        gap: 12px;
+        align-items: stretch;
+        text-align: center;
+    }
+
+    .calendar-header h2 {
+        font-size: 1.6em;
+        margin-bottom: 0;
+    }
+
+    .nav-controls {
+        display: flex;
+        justify-content: space-between;
+    }
+
+    .nav-btn {
+        flex: 1;
+        justify-content: center;
+        padding: 12px;
+    }
+
+    /* Collapse long weekday names down to single letters */
+    .weekdays-header > div::after {
+        content: attr(data-short);
+    }
+
+    .weekdays-header {
+        font-size: 0.9em;
+        margin-bottom: 8px;
+    }
+
+    .day-card {
+        padding: 6px;
+        border-width: 2px;
+    }
+
+    .day-number {
+        font-size: 1em;
+    }
+
+    .event-sticker {
+        font-size: 0.65em;
+        padding: 3px 6px;
+        border-radius: 6px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: 100%;
+        display: block;
+    }
+
+    [data-theme="elderly"] .event-sticker {
+        font-size: 0.75em;
+        padding: 6px 10px;
+    }
+}
+
+
+
+/* ==========================================================================
+   FIX FOR THE WEEKDAY GRIDS & CONTAINER CLIPPING RESILIENCE
+   ========================================================================== */
+
+/* Establish the core 7-column layout engine for dates and headers */
+.weekdays-header {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    text-align: center;
+    font-weight: bold;
+    margin-bottom: 15px;
+    color: #718096;
+}
+
+/* Center-align the text elements inside each grid column container */
+.weekdays-header > div {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+}
+
+/* Containment safety shield to block horizontal scrollbar leaks entirely */
+.container, .calendar-wrapper, .days-grid, .weekdays-header {
+    max-width: 100%;
+    box-sizing: border-box;
+}
+
+
+
+
+/* ==========================================================================
+   STRICT GRID CONSTRAINT AND TEXT CONTAINMENT ENGINE
+   ========================================================================== */
+
+/* Apply global border box calculations to prevent padding from expanding cards */
+*, *::before, *::after {
+    box-sizing: border-box;
+}
+
+/* Ensure the calendar container behaves as a strict bounding container box */
+.calendar-wrapper {
+    width: 100%;
+    overflow: hidden; 
+}
+
+/* Force both grids to follow an identical, unyielding 7-column matrix distribution */
+.weekdays-header, .days-grid {
+    display: grid !important;
+    grid-template-columns: repeat(7, minmax(0, 1fr)) !important;
+    width: 100% !important;
+    gap: var(--grid-gap) !important;
+}
+
+/* Break the default text-expansion behavior inside the individual calendar day cells */
+.day-card {
+    min-width: 0 !important;
+    width: 100% !important;
+    word-wrap: break-word;
+    overflow: hidden;
+}
+
+/* Clamp event stickers so long text strings can never push the grid borders wide */
+.event-sticker {
+    display: block !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    width: 100% !important;
+    box-sizing: border-box;
+}
+
+
+
+/* ==========================================================================
+   HYBRID ICONIC MATRIX & ACCESSIBLE SLIDE-UP DRAWER MODULE
+   ========================================================================== */
+
+/* Day Card Event States */
+.day-card.has-event {
+    cursor: pointer;
+    background-color: var(--accent) !important;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.day-card.has-event:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+}
+
+/* Event Sticker Flex Layout Base Configuration */
+.sticker-stack {
+    margin-top: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    width: 100%;
+}
+
+.event-sticker {
+    display: inline-flex !important;
+    align-items: center;
+    gap: 6px;
+    border-radius: 8px;
+    padding: 4px 8px;
+    font-weight: bold;
+    font-size: 0.75em;
+    color: var(--text-main);
+}
+
+.event-birthday { background-color: rgba(255, 255, 255, 0.6); }
+.event-memorial { background-color: rgba(0, 0, 0, 0.08); }
+
+.event-icon {
+    flex-shrink: 0;
+    stroke: currentColor;
+}
+
+/* --------------------------------------------------------------------------
+   Interactive Bottom Sheet Drawer Styles
+   -------------------------------------------------------------------------- */
+.detail-sheet-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 2000;
+    display: flex;
+    align-items: flex-end;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.detail-sheet-overlay.is-active {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.detail-sheet-card {
+    background-color: var(--card-bg);
+    width: 100%;
+    max-width: 768px;
+    margin: 0 auto;
+    border-top-left-radius: var(--border-radius);
+    border-top-right-radius: var(--border-radius);
+    padding: 24px;
+    box-shadow: 0 -10px 30px rgba(0, 0, 0, 0.15);
+    transform: translateY(100%);
+    transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.detail-sheet-overlay.is-active .detail-sheet-card {
+    transform: translateY(0);
+}
+
+.detail-sheet-pull-bar {
+    width: 40px;
+    height: 4px;
+    background-color: #cbd5e1;
+    border-radius: 2px;
+    margin: 0 auto 15px auto;
+}
+
+.detail-sheet-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    border-bottom: 2px dashed #e2e8f0;
+    padding-bottom: 12px;
+}
+
+#modalDateLabel {
+    font-size: 1.4em;
+    font-weight: 800;
+    color: var(--text-main);
+}
+
+.detail-close-btn {
+    background: none;
+    border: none;
+    color: #94a3b8;
+    cursor: pointer;
+    padding: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: color 0.15s ease;
+}
+
+.detail-close-btn:hover {
+    color: var(--primary);
+}
+
+.detail-sheet-content {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    max-height: 50vh;
+    overflow-y: auto;
+    padding-bottom: 10px;
+}
+
+.modal-event-block {
+    background: #f8fafc;
+    border-left: 6px solid var(--secondary);
+    padding: 16px 20px;
+    border-radius: 12px;
+    font-size: 1.25em;
+    font-weight: 700;
+    color: var(--text-main);
+    box-shadow: 0 2px 5px rgba(0,0,0,0.02);
+}
+
+[data-theme="elderly"] .modal-event-block {
+    font-size: 1.6em;
+    padding: 22px 26px;
+    border-left-width: 8px;
+}
+
+/* --------------------------------------------------------------------------
+   Mobile-Viewport Override Rule System
+   -------------------------------------------------------------------------- */
+@media (max-width: 768px) {
+    /* Compress grid box sizing properties */
+    .day-card {
+        padding: 6px 4px !important;
+        justify-content: flex-start !important;
+        gap: 2px;
+    }
+
+    /* Transform text stickers into standalone iconic visual blocks */
+    .sticker-stack {
+        flex-direction: row;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 3px;
+        margin-top: 4px;
+    }
+
+    .event-sticker {
+        padding: 4px !important;
+        border-radius: 6px !important;
+        justify-content: center;
+        width: auto !important;
+        min-width: 22px;
+        height: 22px;
+    }
+
+    /* Hide long descriptions to eliminate grid container blowout risks */
+    .sticker-text {
+        display: none !important;
+    }
+
+    /* Scale vector dimensions to sit gracefully alongside layout text */
+    .event-icon {
+        width: 14px !important;
+        height: 14px !important;
+    }
+    
+    [data-theme="elderly"] .event-icon {
+        width: 18px !important;
+        height: 18px !important;
+    }
+}
+
+
+
+/* ==========================================================================
+   TWIN CAROUSEL FEED LAYOUT & CHRONOLOGICAL LIST STYLES
+   ========================================================================== */
+
+.twin-feed-deck {
+    display: flex;
+    gap: var(--grid-gap);
+    margin-top: 30px;
+    width: 100%;
+}
+
+.feed-card {
+    flex: 1;
+    background: #f8fafc;
+    border-radius: var(--border-radius);
+    padding: 25px;
+    border: 2px solid #e2e8f0;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.current-month-feed {
+    border-color: rgba(78, 205, 196, 0.4);
+    background: rgba(240, 247, 244, 0.5);
+}
+
+.next-month-feed {
+    border-style: dashed;
+    background: #fafafa;
+}
+
+.feed-card-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: var(--text-main);
+    border-bottom: 2px solid rgba(0,0,0,0.05);
+    padding-bottom: 10px;
+}
+
+.feed-card-header h3 {
+    font-size: 1.25em;
+    font-weight: 800;
+}
+
+.feed-list-content {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+/* Individual Chronological Event Items */
+.feed-row-item {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    background: var(--card-bg);
+    padding: 14px 20px;
+    border-radius: 14px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.02);
+    border-left: 5px solid #cbd5e1;
+}
+
+.feed-item-birthday {
+    border-left-color: var(--primary);
+}
+
+.feed-item-memorial {
+    border-left-color: var(--elderly-view);
+}
+
+.feed-row-badge {
+    font-size: 1.4em;
+    flex-shrink: 0;
+}
+
+.feed-row-details {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.feed-row-date {
+    font-size: 0.75em;
+    font-weight: 800;
+    text-transform: uppercase;
+    color: #718096;
+}
+
+.feed-row-label {
+    font-size: 1.05em;
+    font-weight: 700;
+    color: var(--text-main);
+}
+
+.feed-empty-state {
+    text-align: center;
+    padding: 20px;
+    color: #a0aec0;
+    font-size: 0.9em;
+    font-style: italic;
+}
+
+/* Grandparent Theme Overrides for High-Contrast Visibility Layouts */
+[data-theme="elderly"] .feed-card {
+    padding: 30px;
+}
+
+[data-theme="elderly"] .feed-row-label {
+    font-size: 1.3em;
+}
+
+[data-theme="elderly"] .feed-row-date {
+    font-size: 0.9em;
+}
+
+/* --------------------------------------------------------------------------
+   Mobile Viewport Fold Collapse Rule Constraint
+   -------------------------------------------------------------------------- */
+@media (max-width: 768px) {
+    .twin-feed-deck {
+        flex-direction: column;
+        gap: 15px;
+    }
+    
+    .feed-card {
+        padding: 16px;
+    }
+
+    .feed-row-item {
+        padding: 10px 14px;
+        gap: 10px;
+    }
+}
+
     </style>
 </head>
 <body>
@@ -140,15 +676,24 @@ header {
     <div class="container">
         <header>
             <div class="logo-area">
-                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <!-- High-contrast responsive SVG calendar icon -->
+                <svg class="header-icon" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                     <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
                     <line x1="16" y1="2" x2="16" y2="6"></line>
                     <line x1="8" y1="2" x2="8" y2="6"></line>
                     <line x1="3" y1="10" x2="21" y2="10"></line>
-                </path></svg>
+                    <path d="M8 14h.01M12 14h.01M16 14h.01M8 18h.01M12 18h.01M16 18h.01" stroke-width="3"></path>
+                </svg>
                 <span>FamilyCircles</span>
             </div>
             <button class="view-toggle-btn" id="viewToggle" onclick="toggleViewMode()">
+                <!-- Accessible responsive user theme toggle icon -->
+                <svg class="toggle-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                    <circle cx="9" cy="7" r="4"></circle>
+                    <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                    <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                </svg>
                 <span id="toggleText">Switch to Grandparent Mode</span>
             </button>
         </header>
@@ -161,7 +706,9 @@ header {
                 Paste your family tree registry lines below (Format: Name, DOB, DOD):
             </p>
             
-            <textarea id="csvInputArea" style="width: 100%; height: 120px; padding: 15px; border-radius: 12px; border: 2px solid #cbd5e1; font-family: monospace; font-size: 14px; margin-bottom: 15px; resize: vertical;" placeholder="Name,DOB,DOD&#10;John Doe,10 JUN 2003,&#10;Jane Doe,22 MAY 2006,"></textarea>
+            <textarea id="csvInputArea" style="width: 100%; height: 120px; padding: 15px; border-radius: 12px; border: 2px solid #cbd5e1; font-family: monospace; font-size: 14px; margin-bottom: 15px; resize: vertical;" placeholder="Name,DOB,DOD
+John Doe,10 JUN 2003,
+Jane Doe,22 MAY 2006,"></textarea>
             
             <button onclick="UIManager.importFromTextBox()" style="background: var(--secondary); color: white; border: none; padding: 12px 25px; border-radius: 12px; cursor: pointer; font-weight: bold; font-size: 0.9em;">
                 Update Calendar Matrix
@@ -184,17 +731,67 @@ header {
             <div class="calendar-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px;">
                 <h2 id="monthYearDisplay">Loading Engine...</h2>
                 <div class="nav-controls">
-                    <button onclick="CalendarGridRenderer.changeMonth(-1)" style="padding: 10px 20px; font-weight: bold; border-radius: 8px; cursor: pointer; border: 1px solid #cbd5e1; background: #fff;">◀ Prev</button>
-                    <button onclick="CalendarGridRenderer.changeMonth(1)" style="padding: 10px 20px; font-weight: bold; border-radius: 8px; cursor: pointer; border: 1px solid #cbd5e1; background: #fff; margin-left: 10px;">Next ▶</button>
+                    <button class="nav-btn" onclick="CalendarGridRenderer.changeMonth(-1)">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+                        <span>Prev</span>
+                    </button>
+                    <button class="nav-btn" onclick="CalendarGridRenderer.changeMonth(1)">
+                        <span>Next</span>
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                    </button>
                 </div>
             </div>
             
-            <!-- Weekday Columns Header -->
-            <div class="weekdays-header" style="display: grid; grid-template-columns: repeat(7, 1fr); text-align: center; font-weight: bold; margin-bottom: 15px; color: #718096;">
-                <div>Sun</div><div>Mon</div><div>Tue</div><div>Wed</div><div>Thu</div><div>Fri</div><div>Sat</div>
+            <!-- Weekday Columns Header with Responsive Adaptive Labels -->
+            <div class="weekdays-header">
+                <div data-long="Sunday" data-short="S"></div>
+                <div data-long="Monday" data-short="M"></div>
+                <div data-long="Tuesday" data-short="T"></div>
+                <div data-long="Wednesday" data-short="W"></div>
+                <div data-long="Thursday" data-short="T"></div>
+                <div data-long="Friday" data-short="F"></div>
+                <div data-long="Saturday" data-short="S"></div>
             </div>
 
             <div class="days-grid" id="daysGrid"></div>
+
+
+                        <!-- Weekday Columns Header with Responsive Adaptive Labels -->
+            <div class="weekdays-header">
+                <div data-long="Sunday" data-short="S"></div>
+                <div data-long="Monday" data-short="M"></div>
+                <div data-long="Tuesday" data-short="T"></div>
+                <div data-long="Wednesday" data-short="W"></div>
+                <div data-long="Thursday" data-short="T"></div>
+                <div data-long="Friday" data-short="F"></div>
+                <div data-long="Saturday" data-short="S"></div>
+            </div>
+
+            <div class="days-grid" id="daysGrid"></div>
+
+            <!-- ==========================================================================
+                 TWIN FEED CAROUSEL ANCHOR HOOKS
+                 ========================================================================== -->
+            <div class="twin-feed-deck">
+                <!-- Card 1: Active Viewing Month Ledger -->
+                <div class="feed-card current-month-feed">
+                    <div class="feed-card-header">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                        <h3 id="currentFeedTitle">This Month</h3>
+                    </div>
+                    <div class="feed-list-content" id="currentFeedList"></div>
+                </div>
+
+                <!-- Card 2: Predictive Upcoming Month Preview -->
+                <div class="feed-card next-month-feed">
+                    <div class="feed-card-header">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                        <h3 id="nextFeedTitle">Coming Up Next</h3>
+                    </div>
+                    <div class="feed-list-content" id="nextFeedList"></div>
+                </div>
+            </div>
+
         </main>
 
     </div>
@@ -275,9 +872,14 @@ const FamilyDataEngine = {
 };
 
 let currentTheme = 'young';
+/**
+ * Toggles the high-contrast layout mode for grandparents and children
+ * and re-triggers the renderer module to recalculate grid sizes instantly.
+ */
 function toggleViewMode() {
     const body = document.body;
     const txt = document.getElementById('toggleText');
+    
     if (currentTheme === 'young') {
         body.setAttribute('data-theme', 'elderly');
         currentTheme = 'elderly';
@@ -287,22 +889,19 @@ function toggleViewMode() {
         currentTheme = 'young';
         txt.innerText = "Switch to Grandparent Mode";
     }
+
+    // Force the rendering loop to recalculate CSS custom properties instantly
+    if (typeof CalendarGridRenderer !== 'undefined' && CalendarGridRenderer.render) {
+        CalendarGridRenderer.render();
+    }
 }
 
 
         // ==========================================
 // MODULE 3: CalendarGridRenderer
-// Responsibility: Draw calendar dates and inject data events
+// Responsibility: Draw calendar dates and inject data events with semantic SVG assets
 // ==========================================
 const CalendarGridRenderer = {
-    // Start tracking the view state at a stable date (June 2026)
-    currentViewingDate: new Date(2026, 5, 10),
-
-
-    // ==========================================
-// MODULE 3: CalendarGridRenderer
-// Responsibility: Draw calendar dates and inject data events
-// ==========================================
     // Start tracking the view state at a stable date (June 2026)
     currentViewingDate: new Date(2026, 5, 10),
 
@@ -359,10 +958,13 @@ const CalendarGridRenderer = {
         for (let z = 1; z <= remainingSlots; z++) {
             this._createDayCell(z, true, month + 1, year, gridElement);
         }
+
+        // 6. SOLID EXTENSION: Pipeline the twin chronological event summaries below the grid
+        this._renderTwinTimelineDecks(year, month);
     },
 
     /**
-     * Helper logic to build an individual date box
+     * Helper logic to build an individual date box with semantic Emoji assets
      * @private
      */
     _createDayCell(dayNum, isOutsideMonth, monthIndex, yearNum, container) {
@@ -381,21 +983,104 @@ const CalendarGridRenderer = {
 
         // Event Sticker Container
         const stickerContainer = document.createElement('div');
-        stickerContainer.style.marginTop = "10px";
+        stickerContainer.classList.add('sticker-stack');
 
         // Query our data engine for any family events matching this calendar box
         const matches = FamilyDataEngine.getEventsForDay(dayNum, monthIndex, yearNum);
         
-        matches.forEach(event => {
-            const sticker = document.createElement('div');
-            card.style.backgroundColor = "var(--accent)"; // Color block day card highlight
-            sticker.classList.add('event-sticker');
-            sticker.innerText = event.label;
-            stickerContainer.appendChild(sticker);
-        });
+        if (matches.length > 0) {
+            // Collect full description profiles for the interactive summary layout view
+            const detailsSummaryArray = [];
+            
+            matches.forEach(event => {
+                const sticker = document.createElement('div');
+                card.classList.add('has-event');
+                
+                let visualEmojiMarkup = "";
+                if (event.type === 'BIRTHDAY') {
+                    sticker.classList.add('event-birthday');
+                    visualEmojiMarkup = `<span class="event-emoji">🎂</span>`;
+                } else if (event.type === 'MEMORIAL') {
+                    sticker.classList.add('event-memorial');
+                    visualEmojiMarkup = `<span class="event-emoji">🪦</span>`;
+                }
+
+                sticker.classList.add('event-sticker');
+                sticker.innerHTML = `${visualEmojiMarkup}<span class="sticker-text">${event.label}</span>`;
+                stickerContainer.appendChild(sticker);
+                
+                detailsSummaryArray.push(`${event.type === 'BIRTHDAY' ? '🎂' : '🪦'} ${event.label}`);
+            });
+
+            // Set layout context attributes for interactive modal event messaging loops
+            card.setAttribute('data-event-summary', detailsSummaryArray.join(' | '));
+            card.setAttribute('data-date-string', `${dayNum} ${this.currentViewingDate.toLocaleDateString('en-US', { month: 'long' })} ${yearNum}`);
+            card.setAttribute('onclick', 'FamilyInteractionController.openDetailSheet(this)');
+        }
 
         card.appendChild(stickerContainer);
         container.appendChild(card);
+    },
+
+    /**
+     * Sweeps days chronologically to compile high-readability lists for current and preview periods
+     * @private
+     */
+    _renderTwinTimelineDecks(currentYear, currentMonth) {
+        const currentTitle = document.getElementById('currentFeedTitle');
+        const nextTitle = document.getElementById('nextFeedTitle');
+        const currentList = document.getElementById('currentFeedList');
+        const nextList = document.getElementById('nextFeedList');
+
+        if (!currentTitle || !nextTitle || !currentList || !nextList) return;
+
+        // Set up the upcoming month targets using standard Javascript date wrapping rules
+        const nextMonthDate = new Date(currentYear, currentMonth + 1, 1);
+        const nextMonth = nextMonthDate.getMonth();
+        const nextYear = nextMonthDate.getFullYear();
+
+        // 1. Assign dynamic contextual headers
+        const stringOptions = { month: 'long' };
+        currentTitle.innerText = `Events in ${this.currentViewingDate.toLocaleDateString('en-US', stringOptions)}`;
+        nextTitle.innerText = `Coming Up in ${nextMonthDate.toLocaleDateString('en-US', stringOptions)}`;
+
+        // 2. Extract and compile current month list
+        currentList.innerHTML = this._compileChronologicalList(currentYear, currentMonth);
+        // 3. Extract and compile next month list
+        nextList.innerHTML = this._compileChronologicalList(nextYear, nextMonth);
+    },
+
+    /**
+     * Iterates days 1 to 31 to turn active match records into high-readability row strings
+     * @private
+     */
+    _compileChronologicalList(targetYear, targetMonth) {
+        let htmlBuffer = "";
+        const daysInTargetMonth = new Date(targetYear, targetMonth + 1, 0).getDate();
+
+        for (let d = 1; d <= daysInTargetMonth; d++) {
+            const matches = FamilyDataEngine.getEventsForDay(d, targetMonth, targetYear);
+            matches.forEach(event => {
+                const icon = event.type === 'BIRTHDAY' ? '🎂' : '🪦';
+                const classLabel = event.type === 'BIRTHDAY' ? 'feed-item-birthday' : 'feed-item-memorial';
+                
+                htmlBuffer += `
+                    <div class="feed-row-item ${classLabel}">
+                        <span class="feed-row-badge">${icon}</span>
+                        <div class="feed-row-details">
+                            <span class="feed-row-date">Day ${d}</span>
+                            <span class="feed-row-label">${event.label}</span>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        // Return a reassuring fallback string block if a month happens to be completely event-free
+        if (!htmlBuffer) {
+            htmlBuffer = `<div class="feed-empty-state">No family events registered for this month.</div>`;
+        }
+        return htmlBuffer;
     }
 };
 
@@ -513,5 +1198,66 @@ FamilyEngineTests.runSuite();
             console.log("System initialization completed successfully.");
         };
     </script>
+
+        <!-- Slide-Up Bottom Sheet Detail Drawer Frame for Grandparents & Kids -->
+    <div id="familyDetailOverlay" class="detail-sheet-overlay" onclick="FamilyInteractionController.closeDetailSheet()">
+        <div class="detail-sheet-card" onclick="event.stopPropagation()">
+            <div class="detail-sheet-pull-bar"></div>
+            <header class="detail-sheet-header">
+                <h4 id="modalDateLabel">Selected Date</h4>
+                <button class="detail-close-btn" onclick="FamilyInteractionController.closeDetailSheet()" aria-label="Close details">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                </button>
+            </header>
+            <div class="detail-sheet-content" id="modalEventContent">
+                <!-- Dynamic High-Visibility Text Nodes Streamed Here By Click Events -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        /**
+         * MODULE 5: FamilyInteractionController
+         * Responsibility: Intercept grid card touches to drive accessible full-screen detail panels
+         */
+        const FamilyInteractionController = {
+            openDetailSheet(cardElement) {
+                const summaryText = cardElement.getAttribute('data-event-summary');
+                const dateString = cardElement.getAttribute('data-date-string');
+                
+                const overlay = document.getElementById('familyDetailOverlay');
+                const dateLabel = document.getElementById('modalDateLabel');
+                const contentArea = document.getElementById('modalEventContent');
+
+                if (!overlay || !dateLabel || !contentArea) return;
+
+                // Explode collected event tokens into clean, large, high-visibility block entries
+                dateLabel.innerText = dateString;
+                contentArea.innerHTML = "";
+
+                const items = summaryText.split(' | ');
+                items.forEach(item => {
+                    const block = document.createElement('div');
+                    block.classList.add('modal-event-block');
+                    block.innerText = item;
+                    contentArea.appendChild(block);
+                });
+
+                // Engage active class animation targets inside style stylesheets
+                overlay.classList.add('is-active');
+                document.body.style.overflow = 'hidden'; // Freeze scrolling viewport leaks
+            },
+
+            closeDetailSheet() {
+                const overlay = document.getElementById('familyDetailOverlay');
+                if (overlay) overlay.classList.remove('is-active');
+                document.body.style.overflow = ''; // Unlock scrolling layers
+            }
+        };
+    </script>
+
 </body>
 </html>
