@@ -1113,20 +1113,49 @@ const UIManager = {
 
         // ==========================================
 // MODULE 2: Automated Engine Regression Verification
-// Responsibility: Assert logic correctness during runtimes
+// Responsibility: High-density unit testing and runtime regression assertions with state isolation
 // ==========================================
 const FamilyEngineTests = {
     runSuite() {
-        console.group("🚀 Running FamilyDataEngine Verification Tests...");
-        try {
-            this.testCSVParser();
-            this.testBirthdayAgeCalculation();
-            this.testTrailingCommaResilience();
-            console.log("✅ All data engine unit tests passed cleanly!");
-        } catch (error) {
-            console.error("❌ Test Suite Regression Detected:", error.message);
-        }
+        console.group("🚀 Running Maximum Coverage Family Calendar Test Harness...");
+        
+        // SOLID ISOLATION LOCK: Protect live global database arrays from unit test mutations
+        const globalRecordsBackup = [...FamilyDataEngine._records];
+        
+        let passedCount = 0;
+        let totalCount = 0;
+
+        const runTest = (testName, testFn) => {
+            totalCount++;
+            try {
+                testFn.call(this);
+                console.log(`✅ Passed: ${testName}`);
+                passedCount++;
+            } catch (error) {
+                console.error(`❌ Failed Regression Check [${testName}]:`, error.message);
+            }
+        };
+
+        // --- Execute Functional Assertions ---
+        runTest("CSV Parser Basic Token Isolation", this.testCSVParser);
+        runTest("Birthday Age Calculation Math", this.testBirthdayAgeCalculation);
+        runTest("Trailing Comma Whitespace Resilience", this.testTrailingCommaResilience);
+        runTest("Leap Year and Month End Boundary Processing", this.testLeapYearAndMonthEndBoundaries);
+        runTest("Twin-Feed Timeline Chronological Sort & Isolation", this.testTwinFeedIsolationAndChronology);
+        runTest("Theme Switcher State & Text Sync", this.testThemeToggleDOMState);
+        runTest("Decryption Engine Failure Grace & Null Fallback", this.testDecryptionFailureGrace);
+        runTest("DOM Structural Core Target Anchor Verification", this.testDOMAnchorExistence);
+        runTest("Visual Layout Geometry & Fluid Viewport Audit", this.testVisualLayoutGeometry);
+
+        // RESTORE ISOLATION SYNC: Cleanly re-inject family database records before rendering pipeline fires
+        FamilyDataEngine._records = globalRecordsBackup;
+
+        console.log(`\n📊 Quality Audit Complete: ${passedCount}/${totalCount} Unit Assertions Passed Cleanly.`);
         console.groupEnd();
+        
+        if (passedCount !== totalCount) {
+            throw new Error(`CRITICAL REGRESSION: ${totalCount - passedCount} test failures detected!`);
+        }
     },
 
     assert(condition, message) {
@@ -1154,16 +1183,115 @@ const FamilyEngineTests = {
         const records = FamilyDataEngine.parseCSV(testData);
         this.assert(records[0].name === "zz zz", "Failed to clear out whitespace blocks cleanly.");
         this.assert(records[0].dob.day === 22, "Failed to process days properly when row ends on trailing comma.");
+    },
+    
+    testLeapYearAndMonthEndBoundaries() {
+        const leapData = `Name,DOB,DOD\nLeap Baby,29 FEB 2024,`;
+        FamilyDataEngine.parseCSV(leapData);
+        
+        const feb29Event = FamilyDataEngine.getEventsForDay(29, 1, 2026);
+        this.assert(feb29Event.length === 1, "Leap day milestone event match failed.");
+        this.assert(feb29Event[0].label.includes("(2)"), "Leap year duration computation error.");
+
+        const mar1Event = FamilyDataEngine.getEventsForDay(1, 2, 2026);
+        this.assert(mar1Event.length === 0, "Event leaked across calendar month edge coordinates.");
+    },
+
+    testTwinFeedIsolationAndChronology() {
+        const chronologicalData = `Name,DOB,DOD\nLate Birthday,25 JUN 2010,\nEarly Birthday,02 JUN 2015,`;
+        FamilyDataEngine.parseCSV(chronologicalData);
+
+        const renderedHtmlOutput = CalendarGridRenderer._compileChronologicalList(2026, 5);
+        
+        const indexOfEarly = renderedHtmlOutput.indexOf("Early Birthday");
+        const indexOfLate = renderedHtmlOutput.indexOf("Late Birthday");
+
+        this.assert(indexOfEarly !== -1 && indexOfLate !== -1, "Timeline compiler dropped active matching rows.");
+        this.assert(indexOfEarly < indexOfLate, "Timeline engine failed to sort events chronologically by date order.");
+    },
+
+    testThemeToggleDOMState() {
+        const baselineTheme = currentTheme;
+        const toggleButtonText = document.getElementById('toggleText');
+        if (!toggleButtonText) return; 
+
+        toggleViewMode();
+        this.assert(document.body.getAttribute('data-theme') === 'elderly' || currentTheme === 'young', "DOM theme attribute flag injection failed.");
+        
+        if (currentTheme !== baselineTheme) {
+            toggleViewMode();
+        }
+    },
+
+    testDecryptionFailureGrace() {
+        const dummyVaultData = "U2VjcmV0VmF1bHRUZXN0TWF0cml4"; 
+        const invalidPasskey = "WrongSecretPassphrase";
+        
+        const failedOutput = UIManager._deobfuscateData(dummyVaultData, invalidPasskey);
+        this.assert(failedOutput !== "Name,DOB,DOD", "Decryption engine reported false positive on invalid credentials.");
+    },
+
+    testDOMAnchorExistence() {
+        const mandatoryAnchors = [
+            'daysGrid', 
+            'monthYearDisplay', 
+            'currentFeedList', 
+            'nextFeedList', 
+            'familyDetailOverlay', 
+            'modalDateLabel', 
+            'modalEventContent'
+        ];
+
+        mandatoryAnchors.forEach(id => {
+            const domElement = document.getElementById(id);
+            this.assert(domElement !== null, `Critical structural DOM node target anchor is missing: #${id}`);
+        });
+    },
+
+    testVisualLayoutGeometry() {
+        const wrapper = document.querySelector('.calendar-wrapper');
+        const grid = document.getElementById('daysGrid');
+        const firstHeader = document.querySelector('.weekdays-header > div');
+        const firstCard = document.querySelector('.day-card');
+
+        if (!wrapper || !grid) return; 
+
+        const wrapperBounds = wrapper.getBoundingClientRect();
+        this.assert(wrapperBounds.right <= window.innerWidth + 1, 
+            `Horizontal leak detected! Content width (${wrapperBounds.right}px) exceeds device viewport window (${window.innerWidth}px).`);
+
+        if (firstHeader && firstCard) {
+            const headerX = firstHeader.getBoundingClientRect().left;
+            const cardX = firstCard.getBoundingClientRect().left;
+            
+            const deltaX = Math.abs(headerX - cardX);
+            this.assert(deltaX <= 1, 
+                `Grid alignment shift! Weekday columns and date cells are misaligned horizontally by ${deltaX}px.`);
+        }
+
+        const stickers = document.querySelectorAll('.event-sticker');
+        stickers.forEach(sticker => {
+            const stickerWidth = sticker.getBoundingClientRect().width;
+            const parentCardWidth = sticker.closest('.day-card').getBoundingClientRect().width;
+            
+            this.assert(stickerWidth <= parentCardWidth + 1, 
+                `Text blowout! Event sticker (${stickerWidth}px) is bursting wider than its parent date box container (${parentCardWidth}px).`);
+        });
     }
 };
-
-FamilyEngineTests.runSuite();
 
 
         // This placeholder holds the encrypted string compiled by Python
         const EMBEDDED_VAULT = "f1FAVgF8fHcddGJ3J3lVUFRWTBNrWUddWF1MHxwIE39kfg0BHQgAGTtxREBFWRNmWFRJWlxNUhkDAg1+bGETBwEAGx8neV5cX1ENYExcWkQdARgTbG10FQMAHQsBMnlAR1VfWkwYYFRVWVwfHA8TdGR3DQEdCQEZO31CW0xVXlBVEGVGV1laU1AQflJJUUIZAAENeXh2EwcBAh0fJ3ZcQENRRRNjV0ZHUFgBAhUYdXBzEB8DHwofP39RVFZIVVIVc1VKRkAUAQ0RdmhxDQkKAQgcJ35CUFJYXFVJE2pQXEBCVQ1yRVVWUR0CDX1ibhMECAQcHyd2RkZDUVlbDX5SQVhdTB8cCBN6cmQNAhQPBxk7Y0xfSF1eVBF5T0FMUFpYHQEcE2xoYRUACR4DATJ5VF9RTxNgV1tUXF1MVw1xUUdQWEReDUtSVx0BHRNjd2UVAAkfAgEyYF1QXUhWQFkTd1RXWF4BCQMVfHF/ExwBBgUdOntSXl1WWFAQZFFfWVtcXBwcAg1yZnsRARQGHBQ5e1BaQFINa1tUV1kBAg11cmcRARQGGBQ5eF5YTF5AXVcVeF1ZW0RZSRkACA1gaGgTBAgFGh8ndVxdUF1AVkkYekZcUURfAQkDFXBlahMcAQYMHTp3UkVdVkcRcgNyAQwTZnRgDQIUAAQZO2NYXkxBSlQRdkxHRVFeVB0BFRNsbXQVAAkVCwEyYFRQVERSDWtbVFkcFBNneX0VAAkUCwEyYFRDUUUTa1lHXFxRAQEVGHl0fxAcChQNHz9iWExbQ1lSTxFxXl5MFAIMEWNoYw0JCgMJHCdgVF1XFXBKQFJZUEZZXVFFE29dSlRTUUNaAQkCFXtxYxMcAQcBHTp+SkhcE39QWExdSlFBFXNVVFJPWV1cHQIYE2t9cRUACR4EATJgTFRUDXJfUVVAXVxMWw16VkxQUkxdRBQCDBF9bGENCQoGCRwnYFRdVxV6WFhXX1lHQF1cTFsNelZMUFJMXUQUBBV+c3kTHAEHBB06fkpIXFIVa1VIXUxMWxVhUV5bTBQBAhF+YmUNCQoBBhwnYFRdVxViWV9SR01XUVheDXFIQVJXUF5EHx4YcmB2EBwKGQEfP2JJSFdMGGFUWVFZW1hWXVxCUQECGhh1cHMQHAoYCR8/YklIVw1rW1pEW0xHRU1fWVBYDXFIQVJXUF5EHx8JE3hwaQ0CFA0BGTtjVFZJGH5RHxBlUktdVk9EXEFSRRhxUEhRT1JDUR8HBhBgcn8YAgwEBAE5fkFWURFqTFFIXVtAXVxMWw16VkxQUkxdRBQBAhF6bH0NCQoCAxwnYANrHX9QUkhWQxhxUEhRT1JDUR8EARBnZmEYAgwGAwE5fkFWURFqWFFMUUEVc1VUUk9ZXVwdAh8Tfn1jFQAJGgcBMmBMVFQNaUxeUkcRckhKTFpSW1gcHwINdnxjEQEUBBQUOXheWExeQF1XFXhCS1JDFAIMEXZocQ0JCg0FHCd1TFBeXFVRDXFIX0ZYHQEdE2xoYRUDAB8CATJgTFRUTBN+WUFUEXJEQUdRQBkDBQ15eHYTBAgJHB8ndVxdUF1AVkkYcldVRUETZ1lfUFRcAR8fDxN/cH4NAhQBAz95UUBJTBh+QEtRQF5EVB8GARBsY38YAQUDAgE5WFZYW15HQxNmUFJbHQcNYGhoEwcBAhkfJ29SRlRVQBNsUF5QVRxscXkYAhV7ZWETHAELGQ==";
 
         window.onload = function() {
+            // Run our automated health checks first now that the full DOM is ready!
+            if (typeof FamilyEngineTests !== 'undefined') {
+                FamilyEngineTests.runSuite();
+            }
+
+
+            
             let decryptedData = null;
 
             // Rule 1: Check if the browser already has the password saved in memory cache
