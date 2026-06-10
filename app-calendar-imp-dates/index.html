@@ -669,6 +669,18 @@ header {
     }
 }
 
+
+
+/* Anniversary Visual Highlights */
+.event-anniversary { 
+    background-color: rgba(255, 182, 193, 0.4); 
+}
+
+.feed-item-anniversary {
+    border-left-color: #ff6b8b;
+    background: rgba(255, 240, 242, 0.3);
+}
+
     </style>
 </head>
 <body>
@@ -799,7 +811,7 @@ Jane Doe,22 MAY 2006,"></textarea>
     <script>
         // ==========================================
 // MODULE 1: FamilyDataEngine
-// Responsibility: Parse CSV strings and query family events
+// Responsibility: Parse CSV strings and query family events via strict column indexing
 // ==========================================
 const FamilyDataEngine = {
     _records: [],
@@ -818,17 +830,38 @@ const FamilyDataEngine = {
             const line = lines[i].trim();
             if (!line) continue;
 
-            // Split explicitly by comma boundaries
+            // Split strictly by comma boundaries to isolate positions
             const columns = line.split(',');
             if (columns.length < 2) continue;
 
-            const nameToken = columns[0].trim();
-            const dobToken = columns[1].trim();
+            const nameToken = columns[0] ? columns[0].trim() : "";
+            const dobToken = columns[1] ? columns[1].trim() : "";
             const dodToken = columns[2] ? columns[2].trim() : "";
+            const anniversaryToken = columns[3] ? columns[3].trim() : "";
 
-            if (nameToken && dobToken) {
+            if (!nameToken) continue;
+
+            // STRICT COLUMN SEGREGATION RULES (No text-matching shortcuts)
+            if (anniversaryToken) {
+                // 4th position explicitly contains data: 3 commas format
                 parsedResults.push({
                     name: nameToken,
+                    type: 'ANNIVERSARY',
+                    date: this._parseGedcomDate(anniversaryToken)
+                });
+            } else if (dodToken && !dobToken) {
+                // 3rd position contains data, birth is blank: Standalone Death record
+                parsedResults.push({
+                    name: nameToken,
+                    type: 'STANDARD',
+                    dob: null,
+                    dod: this._parseGedcomDate(dodToken)
+                });
+            } else if (dobToken) {
+                // Standard family profile line (Birthdays and optional trailing Death dates)
+                parsedResults.push({
+                    name: nameToken,
+                    type: 'STANDARD',
                     dob: this._parseGedcomDate(dobToken),
                     dod: dodToken ? this._parseGedcomDate(dodToken) : null
                 });
@@ -842,7 +875,6 @@ const FamilyDataEngine = {
         if (!dateStr) return null;
         const cleanStr = dateStr.trim().toUpperCase();
         
-        // Match spaces or tabs separating day, month, and year tokens
         const parts = cleanStr.split(/\s+/);
         if (parts.length !== 3) return null;
 
@@ -857,29 +889,49 @@ const FamilyDataEngine = {
 
     getEventsForDay(day, monthIndex, currentViewingYear) {
         const events = [];
-        this._records.forEach(person => {
-            if (person.dob && person.dob.day === day && person.dob.month === monthIndex) {
-                if (person.dod) {
-                    events.push({ type: 'MEMORIAL', label: `Remembrance: ${person.name}` });
+        this._records.forEach(record => {
+            // Route 1: Anniversaries
+            if (record.type === 'ANNIVERSARY' && record.date && record.date.day === day && record.date.month === monthIndex) {
+                if (record.date.year === 1900) {
+                    events.push({ type: 'ANNIVERSARY', label: record.name });
                 } else {
-                    const age = currentViewingYear - person.dob.year;
-                    events.push({ type: 'BIRTHDAY', label: `${person.name} (${age})` });
+                    const duration = currentViewingYear - record.date.year;
+                    const suffix = this._getOrdinalSuffix(duration);
+                    events.push({ type: 'ANNIVERSARY', label: `${record.name} (${duration}${suffix})` });
                 }
+            }
+            // Route 2: Birthdays
+            if (record.type === 'STANDARD' && record.dob && record.dob.day === day && record.dob.month === monthIndex) {
+                if (record.dob.year === 1900) {
+                    events.push({ type: 'BIRTHDAY', label: record.name });
+                } else {
+                    const age = currentViewingYear - record.dob.year;
+                    events.push({ type: 'BIRTHDAY', label: `${record.name} (${age})` });
+                }
+            }
+            // Route 3: Memorial Remembrances (Standalone or Profile Deaths)
+            if (record.type === 'STANDARD' && record.dod && record.dod.day === day && record.dod.month === monthIndex) {
+                events.push({ type: 'MEMORIAL', label: `Remembrance: ${record.name}` });
             }
         });
         return events;
+    },
+
+    _getOrdinalSuffix(number) {
+        if (number <= 0) return "";
+        const j = number % 10;
+        const k = number % 100;
+        if (j === 1 && k !== 11) return "st";
+        if (j === 2 && k !== 12) return "nd";
+        if (j === 3 && k !== 13) return "rd";
+        return "th";
     }
 };
 
 let currentTheme = 'young';
-/**
- * Toggles the high-contrast layout mode for grandparents and children
- * and re-triggers the renderer module to recalculate grid sizes instantly.
- */
 function toggleViewMode() {
     const body = document.body;
     const txt = document.getElementById('toggleText');
-    
     if (currentTheme === 'young') {
         body.setAttribute('data-theme', 'elderly');
         currentTheme = 'elderly';
@@ -890,7 +942,6 @@ function toggleViewMode() {
         txt.innerText = "Switch to Grandparent Mode";
     }
 
-    // Force the rendering loop to recalculate CSS custom properties instantly
     if (typeof CalendarGridRenderer !== 'undefined' && CalendarGridRenderer.render) {
         CalendarGridRenderer.render();
     }
@@ -989,7 +1040,6 @@ const CalendarGridRenderer = {
         const matches = FamilyDataEngine.getEventsForDay(dayNum, monthIndex, yearNum);
         
         if (matches.length > 0) {
-            // Collect full description profiles for the interactive summary layout view
             const detailsSummaryArray = [];
             
             matches.forEach(event => {
@@ -1000,16 +1050,20 @@ const CalendarGridRenderer = {
                 if (event.type === 'BIRTHDAY') {
                     sticker.classList.add('event-birthday');
                     visualEmojiMarkup = `<span class="event-emoji">🎂</span>`;
+                    detailsSummaryArray.push(`🎂 ${event.label}`);
                 } else if (event.type === 'MEMORIAL') {
                     sticker.classList.add('event-memorial');
                     visualEmojiMarkup = `<span class="event-emoji">🪦</span>`;
+                    detailsSummaryArray.push(`🪦 ${event.label}`);
+                } else if (event.type === 'ANNIVERSARY') {
+                    sticker.classList.add('event-anniversary');
+                    visualEmojiMarkup = `<span class="event-emoji">💕</span>`;
+                    detailsSummaryArray.push(`💕 ${event.label}`);
                 }
 
                 sticker.classList.add('event-sticker');
                 sticker.innerHTML = `${visualEmojiMarkup}<span class="sticker-text">${event.label}</span>`;
                 stickerContainer.appendChild(sticker);
-                
-                detailsSummaryArray.push(`${event.type === 'BIRTHDAY' ? '🎂' : '🪦'} ${event.label}`);
             });
 
             // Set layout context attributes for interactive modal event messaging loops
@@ -1034,19 +1088,15 @@ const CalendarGridRenderer = {
 
         if (!currentTitle || !nextTitle || !currentList || !nextList) return;
 
-        // Set up the upcoming month targets using standard Javascript date wrapping rules
         const nextMonthDate = new Date(currentYear, currentMonth + 1, 1);
         const nextMonth = nextMonthDate.getMonth();
         const nextYear = nextMonthDate.getFullYear();
 
-        // 1. Assign dynamic contextual headers
         const stringOptions = { month: 'long' };
         currentTitle.innerText = `Events in ${this.currentViewingDate.toLocaleDateString('en-US', stringOptions)}`;
         nextTitle.innerText = `Coming Up in ${nextMonthDate.toLocaleDateString('en-US', stringOptions)}`;
 
-        // 2. Extract and compile current month list
         currentList.innerHTML = this._compileChronologicalList(currentYear, currentMonth);
-        // 3. Extract and compile next month list
         nextList.innerHTML = this._compileChronologicalList(nextYear, nextMonth);
     },
 
@@ -1061,8 +1111,19 @@ const CalendarGridRenderer = {
         for (let d = 1; d <= daysInTargetMonth; d++) {
             const matches = FamilyDataEngine.getEventsForDay(d, targetMonth, targetYear);
             matches.forEach(event => {
-                const icon = event.type === 'BIRTHDAY' ? '🎂' : '🪦';
-                const classLabel = event.type === 'BIRTHDAY' ? 'feed-item-birthday' : 'feed-item-memorial';
+                let icon = "📅";
+                let classLabel = "feed-item-general";
+                
+                if (event.type === 'BIRTHDAY') {
+                    icon = "🎂";
+                    classLabel = "feed-item-birthday";
+                } else if (event.type === 'MEMORIAL') {
+                    icon = "🪦";
+                    classLabel = "feed-item-memorial";
+                } else if (event.type === 'ANNIVERSARY') {
+                    icon = "💕";
+                    classLabel = "feed-item-anniversary";
+                }
                 
                 htmlBuffer += `
                     <div class="feed-row-item ${classLabel}">
@@ -1076,7 +1137,6 @@ const CalendarGridRenderer = {
             });
         }
 
-        // Return a reassuring fallback string block if a month happens to be completely event-free
         if (!htmlBuffer) {
             htmlBuffer = `<div class="feed-empty-state">No family events registered for this month.</div>`;
         }
@@ -1112,177 +1172,206 @@ const UIManager = {
 
 
         // ==========================================
-// MODULE 2: Automated Engine Regression Verification
-// Responsibility: High-density unit testing and runtime regression assertions with state isolation
+// TEST DOMAIN: Framework Lifecycle & State Guard
 // ==========================================
 const FamilyEngineTests = {
     runSuite() {
-        console.group("🚀 Running Maximum Coverage Family Calendar Test Harness...");
-        
-        // SOLID ISOLATION LOCK: Protect live global database arrays from unit test mutations
+        console.log("🚀 Running Automated Regression Suite via Command Line Node...");
         const globalRecordsBackup = [...FamilyDataEngine._records];
-        
-        let passedCount = 0;
-        let totalCount = 0;
+        let passedCount = 0; let totalCount = 0;
 
         const runTest = (testName, testFn) => {
             totalCount++;
             try {
                 testFn.call(this);
-                console.log(`✅ Passed: ${testName}`);
+                console.log(`  ✅ Passed: ${testName}`);
                 passedCount++;
             } catch (error) {
-                console.error(`❌ Failed Regression Check [${testName}]:`, error.message);
+                console.error(`  ❌ Failed Regression Check [${testName}]:`, error.message);
             }
         };
 
-        // --- Execute Functional Assertions ---
-        runTest("CSV Parser Basic Token Isolation", this.testCSVParser);
-        runTest("Birthday Age Calculation Math", this.testBirthdayAgeCalculation);
-        runTest("Trailing Comma Whitespace Resilience", this.testTrailingCommaResilience);
-        runTest("Leap Year and Month End Boundary Processing", this.testLeapYearAndMonthEndBoundaries);
-        runTest("Twin-Feed Timeline Chronological Sort & Isolation", this.testTwinFeedIsolationAndChronology);
-        runTest("Theme Switcher State & Text Sync", this.testThemeToggleDOMState);
-        runTest("Decryption Engine Failure Grace & Null Fallback", this.testDecryptionFailureGrace);
-        runTest("DOM Structural Core Target Anchor Verification", this.testDOMAnchorExistence);
-        runTest("Visual Layout Geometry & Fluid Viewport Audit", this.testVisualLayoutGeometry);
+        try {
+            // Core Functional Tests (Safe for both Node.js and Browser)
+            runTest("CSV Parser Basic Token Isolation", this.testCSVParser);
+            runTest("Birthday Age Calculation Math", this.testBirthdayAgeCalculation);
+            runTest("Trailing Comma Whitespace Resilience", this.testTrailingCommaResilience);
+            runTest("Leap Year and Month End Boundary Processing", this.testLeapYearAndMonthEndBoundaries);
+            runTest("Twin-Feed Timeline Chronological Sort & Isolation", this.testTwinFeedIsolationAndChronology);
+            runTest("Decryption Engine Failure Grace & Null Fallback", this.testDecryptionFailureGrace);
+            runTest("Anniversary Multi-Column Parsing & Ordinal Math", this.testAnniversaryParsingAndOrdinalSuffix);
+            runTest("Placeholder Year 1900 Age Bracket Suppression Check", this.testPlaceholderYearBracketSuppression);
+            runTest("Standalone Memorial Remembrance Matching Verification", this.testMemorialDODRemembrance);
 
-        // RESTORE ISOLATION SYNC: Cleanly re-inject family database records before rendering pipeline fires
-        FamilyDataEngine._records = globalRecordsBackup;
+            // BROWSER-ONLY ENVIRONMENT GUARD: These tests require real DOM rendering layouts
+            if (typeof document !== 'undefined' && typeof window !== 'undefined') {
+                runTest("DOM Structural Core Target Anchor Verification", this.testDOMAnchorExistence);
+                runTest("Theme Switcher State & Text Sync", this.testThemeToggleDOMState);
+                runTest("Visual Layout Geometry & Fluid Viewport Audit", this.testVisualLayoutGeometry);
+            }
 
-        console.log(`\n📊 Quality Audit Complete: ${passedCount}/${totalCount} Unit Assertions Passed Cleanly.`);
-        console.groupEnd();
+        } finally {
+            FamilyDataEngine._records = globalRecordsBackup;
+        }
+
+        runTest("Live Data Isolation State Guard Verification", this.testDataIsolationStateGuard);
+        console.log(`\n📊 Complete: ${passedCount}/${totalCount} Unit Assertions Checked.`);
         
         if (passedCount !== totalCount) {
-            throw new Error(`CRITICAL REGRESSION: ${totalCount - passedCount} test failures detected!`);
+            if (typeof process !== 'undefined') process.exit(1);
+            throw new Error("CRITICAL REGRESSION DETECTED!");
         }
     },
 
     assert(condition, message) {
         if (!condition) throw new Error(`Assertion Failed: ${message}`);
-    },
-
-    testCSVParser() {
-        const testData = `Name,DOB,DOD\nxx xx,10 JUN 2003,\nzz zz,22 MAY 2006,`;
-        const records = FamilyDataEngine.parseCSV(testData);
-        this.assert(records.length === 2, "Should cleanly isolate two unique record rows.");
-        this.assert(records[0].name === "xx xx", "Name extraction normalization mismatch.");
-        this.assert(records[0].dob.month === 5, "June token matching index incorrect.");
-    },
-
-    testBirthdayAgeCalculation() {
-        const testData = `Name,DOB,DOD\nyy yy,15 AUG 2008,`;
-        FamilyDataEngine.parseCSV(testData);
-        const events = FamilyDataEngine.getEventsForDay(15, 7, 2026);
-        this.assert(events.length === 1, "Failed to match event output tracking indices.");
-        this.assert(events[0].label.includes("(18)"), "Dynamic age calculator engine offset error.");
-    },
-
-    testTrailingCommaResilience() {
-        const testData = `Name,DOB,DOD\nzz zz,22 MAY 2006,`;
-        const records = FamilyDataEngine.parseCSV(testData);
-        this.assert(records[0].name === "zz zz", "Failed to clear out whitespace blocks cleanly.");
-        this.assert(records[0].dob.day === 22, "Failed to process days properly when row ends on trailing comma.");
-    },
-    
-    testLeapYearAndMonthEndBoundaries() {
-        const leapData = `Name,DOB,DOD\nLeap Baby,29 FEB 2024,`;
-        FamilyDataEngine.parseCSV(leapData);
-        
-        const feb29Event = FamilyDataEngine.getEventsForDay(29, 1, 2026);
-        this.assert(feb29Event.length === 1, "Leap day milestone event match failed.");
-        this.assert(feb29Event[0].label.includes("(2)"), "Leap year duration computation error.");
-
-        const mar1Event = FamilyDataEngine.getEventsForDay(1, 2, 2026);
-        this.assert(mar1Event.length === 0, "Event leaked across calendar month edge coordinates.");
-    },
-
-    testTwinFeedIsolationAndChronology() {
-        const chronologicalData = `Name,DOB,DOD\nLate Birthday,25 JUN 2010,\nEarly Birthday,02 JUN 2015,`;
-        FamilyDataEngine.parseCSV(chronologicalData);
-
-        const renderedHtmlOutput = CalendarGridRenderer._compileChronologicalList(2026, 5);
-        
-        const indexOfEarly = renderedHtmlOutput.indexOf("Early Birthday");
-        const indexOfLate = renderedHtmlOutput.indexOf("Late Birthday");
-
-        this.assert(indexOfEarly !== -1 && indexOfLate !== -1, "Timeline compiler dropped active matching rows.");
-        this.assert(indexOfEarly < indexOfLate, "Timeline engine failed to sort events chronologically by date order.");
-    },
-
-    testThemeToggleDOMState() {
-        const baselineTheme = currentTheme;
-        const toggleButtonText = document.getElementById('toggleText');
-        if (!toggleButtonText) return; 
-
-        toggleViewMode();
-        this.assert(document.body.getAttribute('data-theme') === 'elderly' || currentTheme === 'young', "DOM theme attribute flag injection failed.");
-        
-        if (currentTheme !== baselineTheme) {
-            toggleViewMode();
-        }
-    },
-
-    testDecryptionFailureGrace() {
-        const dummyVaultData = "U2VjcmV0VmF1bHRUZXN0TWF0cml4"; 
-        const invalidPasskey = "WrongSecretPassphrase";
-        
-        const failedOutput = UIManager._deobfuscateData(dummyVaultData, invalidPasskey);
-        this.assert(failedOutput !== "Name,DOB,DOD", "Decryption engine reported false positive on invalid credentials.");
-    },
-
-    testDOMAnchorExistence() {
-        const mandatoryAnchors = [
-            'daysGrid', 
-            'monthYearDisplay', 
-            'currentFeedList', 
-            'nextFeedList', 
-            'familyDetailOverlay', 
-            'modalDateLabel', 
-            'modalEventContent'
-        ];
-
-        mandatoryAnchors.forEach(id => {
-            const domElement = document.getElementById(id);
-            this.assert(domElement !== null, `Critical structural DOM node target anchor is missing: #${id}`);
-        });
-    },
-
-    testVisualLayoutGeometry() {
-        const wrapper = document.querySelector('.calendar-wrapper');
-        const grid = document.getElementById('daysGrid');
-        const firstHeader = document.querySelector('.weekdays-header > div');
-        const firstCard = document.querySelector('.day-card');
-
-        if (!wrapper || !grid) return; 
-
-        const wrapperBounds = wrapper.getBoundingClientRect();
-        this.assert(wrapperBounds.right <= window.innerWidth + 1, 
-            `Horizontal leak detected! Content width (${wrapperBounds.right}px) exceeds device viewport window (${window.innerWidth}px).`);
-
-        if (firstHeader && firstCard) {
-            const headerX = firstHeader.getBoundingClientRect().left;
-            const cardX = firstCard.getBoundingClientRect().left;
-            
-            const deltaX = Math.abs(headerX - cardX);
-            this.assert(deltaX <= 1, 
-                `Grid alignment shift! Weekday columns and date cells are misaligned horizontally by ${deltaX}px.`);
-        }
-
-        const stickers = document.querySelectorAll('.event-sticker');
-        stickers.forEach(sticker => {
-            const stickerWidth = sticker.getBoundingClientRect().width;
-            const parentCardWidth = sticker.closest('.day-card').getBoundingClientRect().width;
-            
-            this.assert(stickerWidth <= parentCardWidth + 1, 
-                `Text blowout! Event sticker (${stickerWidth}px) is bursting wider than its parent date box container (${parentCardWidth}px).`);
-        });
     }
 };
 
 
+// ==========================================
+// TEST DOMAIN: Core Logic & Parsers
+// ==========================================
+FamilyEngineTests.testCSVParser = function() {
+    const testData = `Name,DOB,DOD,ANNIVERSARY\nxx xx,10 JUN 2003,,`;
+    const records = FamilyDataEngine.parseCSV(testData);
+    this.assert(records.length === 1, "Should isolate record row.");
+    this.assert(records[0].name === "xx xx", "Name extraction normalization mismatch.");
+    this.assert(records[0].dob.month === 5, "June token index incorrect.");
+};
+
+FamilyEngineTests.testBirthdayAgeCalculation = function() {
+    const testData = `Name,DOB,DOD,ANNIVERSARY\nyy yy,15 AUG 2008,,`;
+    FamilyDataEngine.parseCSV(testData);
+    const events = FamilyDataEngine.getEventsForDay(15, 7, 2026);
+    this.assert(events.length === 1, "Failed to match event output tracking indices.");
+    this.assert(events[0].label.includes("(18)"), "Dynamic age calculator offset error.");
+};
+
+FamilyEngineTests.testTrailingCommaResilience = function() {
+    const testData = `Name,DOB,DOD,ANNIVERSARY\nzz zz,22 MAY 2006,,`;
+    const records = FamilyDataEngine.parseCSV(testData);
+    this.assert(records[0].name === "zz zz", "Failed to clear whitespace blocks cleanly.");
+    this.assert(records[0].dob.day === 22, "Failed to process trailing commas properly.");
+};
+
+FamilyEngineTests.testLeapYearAndMonthEndBoundaries = function() {
+    const leapData = `Name,DOB,DOD,ANNIVERSARY\nLeap Baby,29 FEB 2024,,`;
+    FamilyDataEngine.parseCSV(leapData);
+    const feb29Event = FamilyDataEngine.getEventsForDay(29, 1, 2026);
+    this.assert(feb29Event.length === 1, "Leap day milestone event match failed.");
+    this.assert(feb29Event[0].label.includes("(2)"), "Leap year duration error.");
+    const mar1Event = FamilyDataEngine.getEventsForDay(1, 2, 2026);
+    this.assert(mar1Event.length === 0, "Event leaked across calendar month edge coordinates.");
+};
+
+FamilyEngineTests.testTwinFeedIsolationAndChronology = function() {
+    const chronologicalData = `Name,DOB,DOD,ANNIVERSARY\nLate Birthday,25 JUN 2010,,\nEarly Birthday,02 JUN 2015,,`;
+    FamilyDataEngine.parseCSV(chronologicalData);
+    if (typeof CalendarGridRenderer !== 'undefined' && CalendarGridRenderer._compileChronologicalList) {
+        const renderedHtmlOutput = CalendarGridRenderer._compileChronologicalList(2026, 5);
+        const indexOfEarly = renderedHtmlOutput.indexOf("Early Birthday");
+        const indexOfLate = renderedHtmlOutput.indexOf("Late Birthday");
+        this.assert(indexOfEarly !== -1 && indexOfLate !== -1, "Timeline compiler dropped matching rows.");
+        this.assert(indexOfEarly < indexOfLate, "Timeline engine failed to sort events chronologically.");
+    }
+};
+
+
+// ==========================================
+// TEST DOMAIN: Multi-Column Event Taxonomies
+// ==========================================
+FamilyEngineTests.testAnniversaryParsingAndOrdinalSuffix = function() {
+    const testData = `Name,DOB,DOD,ANNIVERSARY\nme & her anniversary,,,5 JUN 2024`;
+    const records = FamilyDataEngine.parseCSV(testData);
+    this.assert(records.length === 1, "Failed to parse multi-column 3-comma anniversary line.");
+    this.assert(records[0].type === 'ANNIVERSARY', "Position parser misclassified anniversary record layout.");
+    const events = FamilyDataEngine.getEventsForDay(5, 5, 2026);
+    this.assert(events.length === 1, "Failed to retrieve compiled event from 3-comma layout.");
+    this.assert(events[0].label.includes("(2nd)"), "Ordinal grammar calculation loop failed.");
+};
+
+FamilyEngineTests.testPlaceholderYearBracketSuppression = function() {
+    const testData = `Name,DOB,DOD,ANNIVERSARY\nNo Year Birthday,10 JUN 1900,,\nNo Year Anniversary,,,10 JUN 1900`;
+    FamilyDataEngine.parseCSV(testData);
+    const events = FamilyDataEngine.getEventsForDay(10, 5, 2026);
+    this.assert(events.length === 2, "Failed to match fallback year registry tokens.");
+    events.forEach(event => {
+        this.assert(!event.label.includes("("), `Age bracket leak on year 1900 fallback: "${event.label}"`);
+    });
+};
+
+FamilyEngineTests.testMemorialDODRemembrance = function() {
+    const testData = `Name,DOB,DOD,ANNIVERSARY\nthem,,1 JUN 2026,`;
+    const records = FamilyDataEngine.parseCSV(testData);
+    this.assert(records.length === 1, "Failed to isolate strict 2-comma death data line.");
+    this.assert(records[0].dod !== null && records[0].dob === null, "Position tokenizer misaligned columns.");
+    const events = FamilyDataEngine.getEventsForDay(1, 5, 2026);
+    this.assert(events.length === 1, "Failed to query standalone memorial record via column index.");
+    this.assert(events[0].label === "Remembrance: them", "Memorial rendering title text mismatch.");
+};
+
+FamilyEngineTests.testDecryptionFailureGrace = function() {
+    const dummyVaultData = "U2VjcmV0VmF1bHRUZXN0TWF0cml4"; 
+    const invalidPasskey = "WrongSecretPassphrase";
+    const failedOutput = UIManager._deobfuscateData(dummyVaultData, invalidPasskey);
+    this.assert(failedOutput !== "Name,DOB,DOD,ANNIVERSARY", "Decryption engine reported false positive.");
+};
+
+FamilyEngineTests.testDataIsolationStateGuard = function() {
+    const handlesTestingData = FamilyDataEngine._records.some(r => 
+        r.name === "me & her anniversary" || r.name === "No Year Birthday" || r.name === "xx xx" || r.name === "them"
+    );
+    this.assert(!handlesTestingData, "State Leak! Test runner failed to restore live family data views.");
+};
+
+
+// ==========================================
+// TEST DOMAIN: Browser Environment Visual Layout Metrics
+// ==========================================
+FamilyEngineTests.testThemeToggleDOMState = function() {
+    const baselineTheme = currentTheme;
+    const toggleButtonText = document.getElementById('toggleText');
+    if (!toggleButtonText) return; 
+    toggleViewMode();
+    this.assert(document.body.getAttribute('data-theme') === 'elderly' || currentTheme === 'young', "DOM theme attribute flag failed.");
+    if (currentTheme !== baselineTheme) toggleViewMode();
+};
+
+FamilyEngineTests.testDOMAnchorExistence = function() {
+    const mandatoryAnchors = [
+        'daysGrid', 'monthYearDisplay', 'currentFeedList', 
+        'nextFeedList', 'familyDetailOverlay', 'modalDateLabel', 'modalEventContent'
+    ];
+    mandatoryAnchors.forEach(id => {
+        const domElement = document.getElementById(id);
+        this.assert(domElement !== null, `Critical structural target node is missing: #${id}`);
+    });
+};
+
+FamilyEngineTests.testVisualLayoutGeometry = function() {
+    const wrapper = document.querySelector('.calendar-wrapper');
+    const grid = document.getElementById('daysGrid');
+    const firstHeader = document.querySelector('.weekdays-header > div');
+    const firstCard = document.querySelector('.day-card');
+    if (!wrapper || !grid) return; 
+
+    const wrapperBounds = wrapper.getBoundingClientRect();
+    this.assert(wrapperBounds.right <= window.innerWidth + 1, `Horizontal leak detected! Content width exceeds viewport.`);
+
+    if (firstHeader && firstCard) {
+        const deltaX = Math.abs(firstHeader.getBoundingClientRect().left - firstCard.getBoundingClientRect().left);
+        this.assert(deltaX <= 1, `Grid alignment shift! Columns misaligned horizontally by ${deltaX}px.`);
+    }
+
+    document.querySelectorAll('.event-sticker').forEach(sticker => {
+        this.assert(sticker.getBoundingClientRect().width <= sticker.closest('.day-card').getBoundingClientRect().width + 1, "Text blowout!");
+    });
+};
+
+
         // This placeholder holds the encrypted string compiled by Python
-        const EMBEDDED_VAULT = "f1FAVgF8fHcddGJ3AXl9e3hmaGF+eWFsO3FLVkheUhV3UVlbRFVSGQAADXl4dhMHAQAeHyd5WkZZUQ1gRFxXXEBFTB8fChN4cGkNAR0IBRk7cUBaQ1kTZlBUREIBCQYVcGVqEx8IAw0dOmdGW11BXFAQflJJUUIZAAcNcnh/EwcBAR8fJ3VcXVBdQFZJGHtAS1FEVUwYYFRVWVwfHAkTf2R+DQEdCgMZO35CRl9ZWxV/X1hBTFAfBAkQa3ZvGAEFAwIBOWNZSlBUXUwTb11UQFwcHwsNfnZ3EQEUBxQUOXheWExeQF1XFXZYQkZeXRN0WV1IVwEKE3t+Zg0CFAwCGTt+WEBfWUddEXZMR0RVUhkAAA18bmwTBAgHGR8na1JZVFVAUg1xUUdQWEReAQkCFXBgfxMcAQAFHTpnUkNZURV8X0VSQFVSURF5T0FMUFpYEUNMUQEJAxV/f3sTHAEBBB06fltMVVZQXFENcUhfRlgdAR0TYHlhFQAJGAMBMmVUQlVIXkwYeldDUUVaQBQCBBF6eH0NCQoAABwnfUxSXlQRY0VSS1EfBBF9bGENCQoABBwnfkJQUlhcVUkTZFVHXVhRVx8cABNmdGANAhQNBBk7fUJbTFVeUFUQZEBAWVpZHQEdE2xtdBUACRgKATJpVFlVSEENeh10HQQNYGhoEwQICBofJ2tGWFBJVFINflJBWVlAUgEJCxVwZWoTHAELDR06flJMXFpUEWNFUkUUChV7cWMTHAEKDR06flJfWVsVd1FZWkBZHwcJEGdyYxgCDAgFATl+UFJdX1FMSQ15QFhQHBwKDWt2ZREBFAUVFDlmSFVJE2xCXlRFWFhfQVlbFXNVVFJPWV1cHQEcE2d5fRUACRkHATJgTFRUDXlMUFJbVllfE29dSlRTUUNaAQoGFXd1bxMcAQACHTp+SkhcE3RDWUtGQVRSXRFySEpMWlJbWBwcCg11cmcRARQAFRQ5ZkhVSRNmUEZRQ1FZRkFUUl0RckhKTFpSW1gcGhNie2cVAAkZAgEyYExUVEwTd11WW1BERRN9WUBdUBwfBA12fGMRARQHGhQ5ZkhVSRN+UUFUW0VJV0RWE3dUSUxRTFZaGQIQbGZqGAIMBQkBOX5BVlFQEH9SRVlHXUReQ1peWR8EBhBrdm8YAgwEAQE5fkFWURFjRVxYU1JBWUVBX0xQE3dUSUxRTFZaGQMBDX5sYRMECAUfHydrSlBVEGBXAxh7VFdVSElYVF9UWRBvVlRZUVRfWQEBGhh+dGMQHAoYDB8/YklIVw1iUldUVUVGQVRSXRFySEpMWlJbWBwfBA1ycnsRARQEHxQ5Zh9jA3lMWlZQXxBvVlRZUVRfWQECHRh5YH0QHAoaCx8/YklIVw1iRldQWV8Tb11KVFNRQ1oBCgEVYnV9ExwBBAEdOn5KSFwTb1BWTEENelZMUFJMXUQUAQQRfmJlDQkKAggcJ35CUFJYXFVJE2RKVVRfHBwKDX52dxEBFAsZFDlzUFhAWklZE3dUV1heAQkDFXBgfxMfCAEEHTp+SkhcUhViUV9SDXpaR1tZXh8fDRN/ZH4NAhQBAhk7fUJbTFVeUFUQbFFJTV8Ve1FBVkhUHxkDBw15bHYTBAgJHTllWV5PUBBgRldZXlhYXAEAHRhyZWMQHwMfCh8/RF5GXUJPXRV6WExdAQ8TZnRgDQEdCgcZO2dMQEhdXhVwWEBWSRRyd2UQHBNnbX8VAAkVHydiUkxVHA0EDXVybBEBFAMdFDlvWEJaUgEYBhV7ZWN2DQkKBQEcJ35YXFJGQllfHw0JCxVwYH8THAEDBR06eVJPWUBGRF0BEx8NE2Z0YA0CFAgDGTt5X1JAFBMHEXp4fw0JCgUBHCd+TEpKVFwcDQAdGHx2ZRAcCh0IHz9rRUVSARgBABFxeHQNCQoFARwnaUxQWlEdEBQTbGhhFQAJHQMBMn5UWVEBEx8JE39kfg0CFAgDGTtqTFtfWR8VAwMNeXh2EwQIAB0fJ3lBX0RdTF1JFBMHBhBnZmMYAQUBBwE5bEFdVFBeARMcABNmdGANAR0JARk7cU9XWEphVFldTF0BGAIMEXZocQ0KAwQEHCdgTFJaURFSRVJEFBMEBBBncmMYAgwBAAE5fllZXFUQT1tMWltcHRAcAg1yZnkRARQDHRQ5Z1BDRVpJWRNXWVFPW0QUEwYBEGxjfxgCDAEAATljTV5UWEJMHw0KBxVidX0THAELAh06bF5AURMTEXFPUUwYcltfWVtWX0tSR0gcARMeCRN4cGkNAhQIAz97UU9WSFYTExFjTFlEXBN0X15ERUhKQFRDSQEfDQ0Tf2R+DQIUCAM/a1FPVkhQRlldUUUTCxh+R0IQbF1DUUVQQ0NMQVQUHxUDBw1yeH8TBAgAHTl3TVFUWEINFQ11QUYRcUNdRE5WR0JRX0oBFBMHBhBsZmoYAgwBACdpTF5SRxEWDX1YVVJcQ1ENckNWWkNUQl5SX0EfGREBFRNpfXAVAwAdBic=";
+        const EMBEDDED_VAULT = "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";
 
         window.onload = function() {
             // Run our automated health checks first now that the full DOM is ready!
