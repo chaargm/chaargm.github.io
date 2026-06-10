@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Family Tree Poster Viewer</title>
+    <style>
+        /* Force the app view to lock flush to the mobile layout window */
+        html, body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #111111;
+            overflow: hidden;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            position: fixed;
+        }
+
+        /* Interactive viewport layout frame container */
+        #viewer-container {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            cursor: move;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* The poster element layer utilizes hardware-accelerated 2D matrices */
+        #poster-img {
+            position: absolute;
+            transform-origin: center center;
+            max-width: none;
+            max-height: none;
+            user-select: none;
+            -webkit-user-drag: none;
+            will-change: transform;
+        }
+
+        /* Control Tray Panel Positioning */
+        .control-panel {
+            position: absolute;
+            bottom: 24px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 9999;
+            display: flex;
+            gap: 12px;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 10px 16px;
+            border-radius: 30px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+        }
+
+        .btn {
+            background: #ffffff;
+            color: #111111;
+            border: none;
+            padding: 10px 16px;
+            font-size: 13px;
+            font-weight: 600;
+            border-radius: 20px;
+            cursor: pointer;
+            white-space: nowrap;
+            -webkit-tap-highlight-color: transparent;
+            transition: background 0.1s;
+        }
+
+        .btn:active {
+            background: #cccccc;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="viewer-container">
+        <img id="poster-img" src="poster.png" alt="Family Tree Poster Layout">
+    </div>
+
+    <div class="control-panel">
+        <button class="btn" id="btn-reset">Reset (250% Center)</button>
+        <button class="btn" id="btn-overview">Show Full Poster</button>
+    </div>
+
+    <script>
+        const img = document.getElementById('poster-img');
+        const container = document.getElementById('viewer-container');
+
+        // Target state coordinate tracking
+        let currentScale = 2.5; 
+        let currentX = 0;
+        let currentY = 0;
+        
+        let isDragging = false;
+        let startX = 0;
+        let startY = 0;
+
+        // Automatically target focus framing once asset elements render
+        img.onload = function() {
+            resetToCenterCircle();
+        };
+        if (img.complete) {
+            resetToCenterCircle();
+        }
+
+        // Render transformation matrix updates cleanly
+        function updateTransform() {
+            img.style.transform = `translate(${currentX}px, ${currentY}px) scale(${currentScale})`;
+        }
+
+        // Instantly frame the upper 1/5th content zone at 250% zoom scale
+        function resetToCenterCircle() {
+            currentScale = 2.5;
+            currentX = 0; // Horizontal center anchor alignments
+
+            // Pull the top active ring zone downwards into viewport bounds
+            const imgHeightAtScale = img.offsetHeight * currentScale;
+            currentY = (imgHeightAtScale / 5.2); 
+            
+            img.style.transition = "transform 0.3s cubic-bezier(0.25, 1, 0.5, 1)";
+            updateTransform();
+            setTimeout(() => { img.style.transition = "none"; }, 300);
+        }
+
+        // Rescale matrix to display full aspect ratio
+        function showFullOverview() {
+            const scaleX = container.offsetWidth / img.offsetWidth;
+            const scaleY = container.offsetHeight / img.offsetHeight;
+            
+            // Scaled dynamically with defensive margins
+            currentScale = Math.min(scaleX, scaleY) * 0.95; 
+            currentX = 0;
+            currentY = 0;
+            
+            img.style.transition = "transform 0.3s cubic-bezier(0.25, 1, 0.5, 1)";
+            updateTransform();
+            setTimeout(() => { img.style.transition = "none"; }, 300);
+        }
+
+        // Pointer event framework handlers (Mouse + Touch unified tracking)
+        function pointerDown(e) {
+            isDragging = true;
+            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+            const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+            startX = clientX - currentX;
+            startY = clientY - currentY;
+        }
+
+        function pointerMove(e) {
+            if (!isDragging) return;
+            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+            const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+            currentX = clientX - startX;
+            currentY = clientY - startY;
+            updateTransform();
+        }
+
+        function pointerUp() {
+            isDragging = false;
+        }
+
+        // Mouse Event Listeners
+        container.addEventListener('mousedown', pointerDown);
+        window.addEventListener('mousemove', pointerMove);
+        window.addEventListener('mouseup', pointerUp);
+
+        // Mobile Touch Event Listeners
+        container.addEventListener('touchstart', pointerDown, { passive: true });
+        container.addEventListener('touchmove', pointerMove, { passive: true });
+        container.addEventListener('touchend', pointerUp);
+
+        // Control UI Button Operations Bindings
+        document.getElementById('btn-reset').addEventListener('click', resetToCenterCircle);
+        document.getElementById('btn-overview').addEventListener('click', showFullOverview);
+    </script>
+</body>
+</html>

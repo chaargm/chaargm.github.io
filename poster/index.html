@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Family Tree Poster Viewer</title>
+    <!-- Load OpenSeadragon Core Library -->
+    <script src="https://cdn.jsdelivr.net/npm/openseadragon@6.0.2/build/openseadragon/openseadragon.min.js"></script>
+    <style>
+        /* Zero out defaults and force the app view to fill the entire mobile window screen space */
+        html, body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #111111;
+            overflow: hidden;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        /* Container styling for the interactive canvas mapping layer */
+        #openseadragon-viewer {
+            width: 100%;
+            height: 100%;
+        }
+
+        /* Floating operational control tray overlaying the layout screen */
+        .control-panel {
+            position: absolute;
+            bottom: 24px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 9999;
+            display: flex;
+            gap: 12px;
+            background: rgba(0, 0, 0, 0.75);
+            padding: 12px 16px;
+            border-radius: 30px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+        }
+
+        .btn {
+            background: #ffffff;
+            color: #111111;
+            border: none;
+            padding: 10px 18px;
+            font-size: 14px;
+            font-weight: 600;
+            border-radius: 20px;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: background 0.2s, transform 0.1s;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .btn:active {
+            background: #dddddd;
+            transform: scale(0.95);
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Target mounting element node for the viewer system canvas -->
+    <div id="openseadragon-viewer"></div>
+
+    <!-- Floating Preset Control Tray UI -->
+    <div class="control-panel">
+        <button class="btn" id="btn-reset">Reset (250% Center)</button>
+        <button class="btn" id="btn-overview">Show Full Poster</button>
+    </div>
+
+    <script>
+        // Target settings config variables
+        const PRESET_ZOOM = 2.5; // Your 250% focus baseline zoom level target
+        
+        // Target programmatic center point variables
+        // X is 0.5 (dead horizontal center)
+        // Y is 0.1 (coordinates pushed right into the upper 5th content hub layer)
+        const TARGET_CENTER_X = 0.5;
+        const TARGET_CENTER_Y = 0.1;
+
+        // Initialize the runtime execution block
+        const viewer = OpenSeadragon({
+            id: "openseadragon-viewer",
+            prefixUrl: "https://cdn.jsdelivr.net/npm/openseadragon@6.0.2/build/openseadragon/images/",
+            tileSources: {
+                type: 'image',
+                url: 'poster.png' // Matches your exact local asset path string token
+            },
+            // UI customization profiles
+            showNavigationControl: false, // Disables standard default overlay buttons to save space
+            defaultZoomLevel: PRESET_ZOOM,
+            minZoomLevel: 0.5,
+            maxZoomLevel: 10.0,
+            visibilityRatio: 1.0, // Prevents dragging completely out of view frames
+            constrainDuringPan: true
+        });
+
+        // Helper function to programmatically snap map viewport coordinates to your target hub
+        function focusOnFamilyCircle(immediately = false) {
+            if (!viewer.viewport) return;
+            
+            // Set the strict 250% zoom scale
+            viewer.viewport.zoomTo(PRESET_ZOOM, null, immediately);
+            
+            // Re-center coordinates into the upper fifth content area zone layout
+            viewer.viewport.panTo(new OpenSeadragon.Point(TARGET_CENTER_X, TARGET_CENTER_Y), immediately);
+        }
+
+        // Hook execution into initialization load thread completes securely
+        viewer.addHandler('open', function() {
+            // Apply zoom scaling instantly on first render execution
+            focusOnFamilyCircle(true);
+        });
+
+        // Event binding mechanics for preset control operations
+        document.getElementById('btn-reset').addEventListener('click', function() {
+            focusOnFamilyCircle(false); // Smooth transition back to 250% center
+        });
+
+        document.getElementById('btn-overview').addEventListener('click', function() {
+            // Fits the full tall page asset dimension bounds inside the view pane layout framework
+            viewer.viewport.goHome(false); 
+        });
+    </script>
+</body>
+</html>
