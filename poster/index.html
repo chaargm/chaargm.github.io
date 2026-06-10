@@ -58,6 +58,22 @@
             background: #dddddd;
             transform: scale(0.95);
         }
+
+        @media (max-width: 600px) {
+            .control-panel {
+                width: 90%;
+                justify-content: center;
+                flex-wrap: wrap; /* Allows buttons to wrap to a second line on narrow screens */
+                gap: 8px;
+                bottom: 12px;
+                border-radius: 20px;
+            }
+            .btn {
+                padding: 8px 12px;
+                font-size: 12px;
+            }
+        }
+
     </style>
 </head>
 <body>
@@ -65,11 +81,15 @@
     <!-- Target mounting element node for the viewer system canvas -->
     <div id="openseadragon-viewer"></div>
 
-    <!-- Floating Preset Control Tray UI -->
+    <!-- Expanded Floating Preset Control Tray UI -->
     <div class="control-panel">
-        <button class="btn" id="btn-reset">Reset (250% Center)</button>
-        <button class="btn" id="btn-overview">Show Full Poster</button>
+        <button class="btn" id="btn-150">150%</button>
+        <button class="btn" id="btn-200">200%</button>
+        <button class="btn" id="btn-reset">250% (Center)</button>
+        <button class="btn" id="btn-350">350%</button>
+        <button class="btn" id="btn-overview">Full Poster</button>
     </div>
+
 
     <script>
         // Target settings config variables
@@ -79,7 +99,7 @@
         // X is 0.5 (dead horizontal center)
         // Y is 0.1 (coordinates pushed right into the upper 5th content hub layer)
         const TARGET_CENTER_X = 0.5;
-        const TARGET_CENTER_Y = 0.1;
+        const TARGET_CENTER_Y = 0.5;
 
         // Initialize the runtime execution block
         const viewer = OpenSeadragon({
@@ -90,7 +110,7 @@
                 url: 'poster.png' // Matches your exact local asset path string token
             },
             // UI customization profiles
-            showNavigationControl: false, // Disables standard default overlay buttons to save space
+            showNavigationControl: true, //false, // Disables standard default overlay buttons to save space
             defaultZoomLevel: PRESET_ZOOM,
             minZoomLevel: 0.5,
             maxZoomLevel: 10.0,
@@ -121,8 +141,30 @@
         });
 
         document.getElementById('btn-overview').addEventListener('click', function() {
-            // Fits the full tall page asset dimension bounds inside the view pane layout framework
-            viewer.viewport.goHome(false); 
+            // Force reset both zoom and coordinate constraints to completely show the full poster aspect ratio
+            viewer.viewport.fitBounds(new OpenSeadragon.Rect(0, 0, 1, 1), false);
+        });
+
+        
+
+
+         // Reusable helper function to jump to any zoom scale while maintaining the dead-center alignment
+        function zoomToPreset(level) {
+            viewer.viewport.zoomTo(level, null, false);
+            viewer.viewport.panTo(new OpenSeadragon.Point(TARGET_CENTER_X, TARGET_CENTER_Y), false);
+        }
+
+        // New Preset Button Event Listeners
+        document.getElementById('btn-150').addEventListener('click', function() {
+            zoomToPreset(1.5);
+        });
+
+        document.getElementById('btn-200').addEventListener('click', function() {
+            zoomToPreset(2.0);
+        });
+
+        document.getElementById('btn-350').addEventListener('click', function() {
+            zoomToPreset(3.5);
         });
     </script>
 </body>
