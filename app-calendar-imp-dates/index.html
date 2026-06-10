@@ -1215,7 +1215,11 @@ const FamilyEngineTests = {
                 runTest("DOM Structural Core Target Anchor Verification", this.testDOMAnchorExistence);
                 runTest("Theme Switcher State & Text Sync", this.testThemeToggleDOMState);
                 runTest("Visual Layout Geometry & Fluid Viewport Audit", this.testVisualLayoutGeometry);
+                
+                // Add this line right here to lock in our safety coverage:
+                runTest("Interaction Controller Global API Signature Verification", this.testInteractionControllerAvailability);
             }
+
 
         } finally {
             FamilyDataEngine._records = globalRecordsBackup;
@@ -1377,8 +1381,66 @@ FamilyEngineTests.testVisualLayoutGeometry = function() {
 };
 
 
+/**
+ * Test 14: Interaction Controller API Availability Guard
+ * Asserts that the tap interaction engine object exists in memory and exposes
+ * its required rendering hook signatures cleanly before user click engagement.
+ */
+FamilyEngineTests.testInteractionControllerAvailability = function() {
+    // Assert object visibility across system memory namespaces
+    this.assert(typeof FamilyInteractionController !== 'undefined', 
+        "Reference Error Simulation: FamilyInteractionController is not defined in global scope.");
+        
+    // Assert method existence contract alignment
+    this.assert(typeof FamilyInteractionController.openDetailSheet === 'function', 
+        "API Signature Error: FamilyInteractionController is missing the required openDetailSheet method.");
+    this.assert(typeof FamilyInteractionController.closeDetailSheet === 'function', 
+        "API Signature Error: FamilyInteractionController is missing the required closeDetailSheet method.");
+};
+
+
+
+
         // This placeholder holds the encrypted string compiled by Python
         const EMBEDDED_VAULT = "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";
+
+        /**
+         * MODULE 5: FamilyInteractionController
+         * Responsibility: Intercept grid card touches to drive accessible full-screen detail panels
+         * Placed above lifecycle loaders to guarantee immediate variable availability at render runtime.
+         */
+        const FamilyInteractionController = {
+            openDetailSheet(cardElement) {
+                const summaryText = cardElement.getAttribute('data-event-summary');
+                const dateString = cardElement.getAttribute('data-date-string');
+                
+                const overlay = document.getElementById('familyDetailOverlay');
+                const dateLabel = document.getElementById('modalDateLabel');
+                const contentArea = document.getElementById('modalEventContent');
+
+                if (!overlay || !dateLabel || !contentArea) return;
+
+                dateLabel.innerText = dateString;
+                contentArea.innerHTML = "";
+
+                const items = summaryText.split(' | ');
+                items.forEach(item => {
+                    const block = document.createElement('div');
+                    block.classList.add('modal-event-block');
+                    block.innerText = item;
+                    contentArea.appendChild(block);
+                });
+
+                overlay.classList.add('is-active');
+                document.body.style.overflow = 'hidden';
+            },
+
+            closeDetailSheet() {
+                const overlay = document.getElementById('familyDetailOverlay');
+                if (overlay) overlay.classList.remove('is-active');
+                document.body.style.overflow = '';
+            }
+        };
 
         window.onload = function() {
             // Run our automated health checks first now that the full DOM is ready!
@@ -1387,34 +1449,28 @@ FamilyEngineTests.testVisualLayoutGeometry = function() {
             }
 
             let decryptedData = null;
-
-            // Rule 1: Check if the browser already has the password saved in memory cache
             let savedPassword = localStorage.getItem('_family_calendar_cached_pass');
 
             if (savedPassword) {
-                // Try unlocking automatically with the cached password
                 decryptedData = UIManager._deobfuscateData(EMBEDDED_VAULT, savedPassword);
             }
 
-            // Rule 2: If no cache exists or the password changed, prompt the user once
             if (!decryptedData) {
                 const userAttempt = prompt("🔒 Enter the Family Secret Password to view the calendar:");
                 if (userAttempt) {
                     decryptedData = UIManager._deobfuscateData(EMBEDDED_VAULT, userAttempt);
                     
                     if (decryptedData && decryptedData.startsWith("Name,DOB,DOD")) {
-                        // Success! Save password to memory cache so it never prompts again
                         localStorage.setItem('_family_calendar_cached_pass', userAttempt);
                     } else {
                         alert("❌ Incorrect password. Access Denied.");
                         return;
                     }
                 } else {
-                    return; // Canceled
+                    return;
                 }
             }
 
-            // Pass the decrypted data directly to the calendar rendering engine
             FamilyDataEngine.parseCSV(decryptedData);
             CalendarGridRenderer.render();
             console.log("System initialization completed successfully.");
