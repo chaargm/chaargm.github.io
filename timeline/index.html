@@ -1,0 +1,1944 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dynamic Interleaved History System</title>
+    <style>
+        
+        :root { --bg: #090d16; --panel: #111827; --border: #1f2937; --text: #f3f4f6; --muted: #9ca3af; --pers: #fb923c; --world: #38bdf8; --ok: #10b981; }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { background: var(--bg); color: var(--text); font-family: -apple-system, sans-serif; padding: 12px; }
+        header, .box { background: var(--panel); padding: 12px; border: 1px solid var(--border); border-radius: 8px; margin-bottom: 12px; }
+        label { font-size: 0.7rem; font-weight: bold; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; }
+        .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; margin: 6px 0; }
+        @media (min-width: 480px) { .grid { grid-template-columns: repeat(5, 1fr); } }
+        .chk { display: flex; align-items: center; justify-content: center; background: var(--bg); border: 1px solid var(--border); padding: 8px; border-radius: 6px; cursor: pointer; font-size: 0.75rem; font-weight: bold; }
+        .chk input { display: none; }
+        .chk.active { background: rgba(56, 189, 248, 0.15); border-color: var(--world); color: var(--world); }
+        .chk.active.p-layer { background: rgba(251, 146, 60, 0.15); border-color: var(--pers); color: var(--pers); }
+        .bar { display: flex; gap: 4px; margin-top: 4px; }
+        .btn { flex: 1; background: var(--bg); border: 1px solid var(--border); color: var(--text); padding: 6px; font-size: 0.75rem; font-weight: bold; cursor: pointer; border-radius: 4px; }
+        .btn.active { background: var(--ok); border-color: var(--ok); color: #000; }
+        
+        /* Master Layout Wrapper Supporting Vertically Centered Left Sidebar Year Bubble */
+        .layout-wrapper { display: flex; gap: 8px; position: relative; }
+        .year-sidebar { width: 55px; flex-shrink: 0; position: relative; }
+        
+        /* Pins the year bubble to the vertical center-left edge of the viewport screen */
+        .sticky-year-bubble { position: sticky; top: 50%; transform: translateY(-50%); background: var(--panel); border: 1px solid var(--border); border-left: 3px solid var(--ok); color: var(--ok); font-family: monospace; font-size: 0.85rem; font-weight: 800; padding: 6px 4px; border-radius: 4px; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.3); z-index: 10; width: 100%; letter-spacing: -0.02em; }
+        
+        .feed { background: var(--panel); border: 1px solid var(--border); border-radius: 8px; padding: 12px; position: relative; flex-grow: 1; }
+        .spine { position: absolute; left: 20px; top: 15px; bottom: 15px; width: 2px; background: var(--border); }
+        .node { display: flex; margin-bottom: 14px; position: relative; z-index: 2; }
+        .dot { width: 10px; height: 10px; border-radius: 50%; margin: 12px 0 0 4px; flex-shrink: 0; }
+        .n-pers .dot { background: var(--pers); box-shadow: 0 0 6px var(--pers); }
+        .n-world .dot { background: var(--world); box-shadow: 0 0 6px var(--world); }
+        .n-bridge .dot { background: var(--ok); border: 2px solid var(--bg); }
+        .card { background: var(--bg); border: 1px solid var(--border); border-radius: 6px; padding: 10px; margin-left: 14px; flex-grow: 1; }
+        .n-pers .card { border-left: 3px solid var(--pers); }
+        .n-world .card { border-left: 3px solid var(--world); }
+        .n-bridge .card { border: 1px dashed var(--ok); background: transparent; padding: 6px 10px; }
+        .meta { display: flex; justify-content: space-between; font-size: 0.75rem; font-weight: bold; margin-bottom: 4px; }
+        .tag-p { color: var(--pers); } .tag-w { color: var(--world); } .tag-b { color: var(--ok); font-size: 0.7rem; }
+        .txt { font-size: 0.85rem; color: #e5e7eb; line-height: 1.4; }
+        .carousel-container { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch; margin-top: 6px; }
+        .carousel-card { flex: 0 0 85%; background: var(--panel); border: 1px solid var(--border); padding: 8px; border-radius: 4px; scroll-snap-align: start; border-top: 2px solid var(--world); }
+        .carousel-meta { font-size: 0.7rem; font-weight: bold; color: var(--world); margin-bottom: 4px; display: flex; justify-content: space-between; }
+        
+        
+        .lock-overlay { position: fixed; inset: 0; background: rgba(9, 13, 22, 0.96); z-index: 9999; display: none; flex-direction: column; align-items: center; justify-content: center; padding: 20px; backdrop-filter: blur(8px); }
+        .lock-card { background: #111827; border: 1px solid #1f2937; border-radius: 12px; padding: 24px; max-width: 360px; width: 100%; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.5); }
+        .lock-input { background: #090d16; border: 1px solid #1f2937; color: #f3f4f6; padding: 12px; border-radius: 6px; width: 100%; font-size: 0.95rem; text-align: center; outline: none; margin: 14px 0; }
+        .lock-btn { background: #fb923c; color: #000; border: none; padding: 12px; width: 100%; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 0.9rem; }
+        .unlock-trigger-bar { background: #1e293b; padding: 8px 12px; border-radius: 6px; text-align: center; margin-bottom: 12px; border: 1px solid #334155; font-size: 0.85rem; color: #fb923c; font-weight: bold; cursor: pointer; }
+        
+    </style>
+</head>
+<body>
+    <div id="lockOverlay" class="lock-overlay">
+        <div class="lock-card">
+            <div style="font-size:2rem; margin-bottom:12px;">🔒</div>
+            <h3 style="font-size:1.1rem; margin-bottom:6px;">Unlock Family Records</h3>
+            <p style="font-size:0.8rem; color:#9ca3af;">Enter the master password secret key to decrypt and blend your ancestry data directly into the public timeline.</p>
+            <input type="password" id="vaultPasswordInput" class="lock-input" placeholder="Password Key Token...">
+            <button onclick="triggerManualAuth()" class="lock-btn">Decrypt & Interleave</button>
+            <button onclick="document.getElementById('lockOverlay').style.display='none'" class="lock-btn" style="background:transparent; color:#9ca3af; margin-top:8px;">View Public History Only</button>
+        </div>
+    </div>
+
+    <header>
+        <div id="unlockReminderBtn" class="unlock-trigger-bar" onclick="document.getElementById('lockOverlay').style.display='flex'">🔐 Family Tree Vault Locked — Tap to Decrypt Data</div>
+        <label>Active Context Layers</label>
+        <div class="grid">
+            <div class="chk" id="b-p" style="opacity:0.5; pointer-events:none;"><input type="checkbox" id="c-p">❤️ Family</div>
+            <div class="chk active" id="b-gl"><input type="checkbox" id="c-gl" checked>🌐 Global</div>
+            <div class="chk active" id="b-us"><input type="checkbox" id="c-us" checked>🇺🇸 USA</div>
+            <div class="chk active" id="b-in"><input type="checkbox" id="c-in" checked>🇮🇳 India</div>
+            <div class="chk active" id="b-ks"><input type="checkbox" id="c-ks" checked>🇸🇦 KSA</div>
+        </div>
+        <label>Historical Depth Resolution</label>
+        <div class="bar" id="tBar">
+            <button class="btn active" data-t="1">T1</button>
+            <button class="btn active" data-t="2">T2</button>
+            <button class="btn active" data-t="3">T3</button>
+            <button class="btn active" data-t="4">T4</button>
+            <button class="btn active" data-t="5">T5</button>
+        </div>
+    </header>
+    
+    <div class="layout-wrapper">
+        <div class="year-sidebar">
+            <div class="sticky-year-bubble" id="activeYearDisplay">----</div>
+        </div>
+        <div class="feed">
+            <div class="spine"></div>
+            <div id="stream"></div>
+        </div>
+    </div>
+
+    <script>
+        const vaultPayload = "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";
+        const publicData = [
+  {
+    "year": 1900,
+    "date": "1900",
+    "scope": "Global",
+    "tier": 4,
+    "text": "The Kodak Brownie camera introduces snapshot photography to the masses",
+    "type": "world",
+    "lbl": "\ud83c\udf10 Global"
+  },
+  {
+    "year": 1901,
+    "date": "10 JAN 1901",
+    "scope": "USA",
+    "tier": 3,
+    "text": "The Spindletop oil gusher in Texas launches the modern US petroleum industry",
+    "type": "world",
+    "lbl": "\ud83c\udf10 USA"
+  },
+  {
+    "year": 1901,
+    "date": "5 DEC 1901",
+    "scope": "USA",
+    "tier": 5,
+    "text": "Walt Disney is born in Chicago Illinois",
+    "type": "world",
+    "lbl": "\ud83c\udf10 USA"
+  },
+  {
+    "year": 1902,
+    "date": "15 JAN 1902",
+    "scope": "Saudi Arabia",
+    "tier": 2,
+    "text": "Ibn Saud captures Riyadh consolidating early control for the future Kingdom",
+    "type": "world",
+    "lbl": "\ud83c\udf10 Saudi Arabia"
+  },
+  {
+    "year": 1903,
+    "date": "17 DEC 1903",
+    "scope": "USA",
+    "tier": 1,
+    "text": "The Wright brothers achieve the first powered sustained airplane flight",
+    "type": "world",
+    "lbl": "\ud83c\udf10 USA"
+  },
+  {
+    "year": 1905,
+    "date": "16 OCT 1905",
+    "scope": "India",
+    "tier": 3,
+    "text": "The First Partition of Bengal is implemented by Viceroy Lord Curzon",
+    "type": "world",
+    "lbl": "\ud83c\udf10 India"
+  },
+  {
+    "year": 1906,
+    "date": "18 APR 1906",
+    "scope": "USA",
+    "tier": 3,
+    "text": "The Great San Francisco Earthquake and devastating fires destroy most of the city",
+    "type": "world",
+    "lbl": "\ud83c\udf10 USA"
+  },
+  {
+    "year": 1906,
+    "date": "30 DEC 1906",
+    "scope": "India",
+    "tier": 3,
+    "text": "The All-India Muslim League is founded in Dacca",
+    "type": "world",
+    "lbl": "\ud83c\udf10 India"
+  },
+  {
+    "year": 1908,
+    "date": "1 OCT 1908",
+    "scope": "USA",
+    "tier": 2,
+    "text": "The Ford Model T goes on sale revolutionizing personal assembly-line transit",
+    "type": "world",
+    "lbl": "\ud83c\udf10 USA"
+  },
+  {
+    "year": 1911,
+    "date": "12 DEC 1911",
+    "scope": "India",
+    "tier": 4,
+    "text": "The capital of British India is shifted from Calcutta to Delhi during the Delhi Durbar",
+    "type": "world",
+    "lbl": "\ud83c\udf10 India"
+  },
+  {
+    "year": 1912,
+    "date": "15 APR 1912",
+    "scope": "Global",
+    "tier": 2,
+    "text": "The RMS Titanic sinks in the North Atlantic on its maiden voyage",
+    "type": "world",
+    "lbl": "\ud83c\udf10 Global"
+  },
+  {
+    "year": 1913,
+    "date": "23 DEC 1913",
+    "scope": "USA",
+    "tier": 3,
+    "text": "President Woodrow Wilson signs the Federal Reserve Act creating the US central bank",
+    "type": "world",
+    "lbl": "\ud83c\udf10 USA"
+  },
+  {
+    "year": 1914,
+    "date": "28 JUN 1914",
+    "scope": "Global",
+    "tier": 1,
+    "text": "Assassination of Archduke Franz Ferdinand sparks the outbreak of World War I",
+    "type": "world",
+    "lbl": "\ud83c\udf10 Global"
+  },
+  {
+    "year": 1915,
+    "date": "9 JAN 1915",
+    "scope": "India",
+    "tier": 2,
+    "text": "Mahatma Gandhi returns to India from South Africa to join the freedom struggle",
+    "type": "world",
+    "lbl": "\ud83c\udf10 India"
+  },
+  {
+    "year": 1915,
+    "date": "7 MAY 1915",
+    "scope": "Global",
+    "tier": 3,
+    "text": "The British ocean liner RMS Lusitania is torpedoed and sunk by a German U-boat",
+    "type": "world",
+    "lbl": "\ud83c\udf10 Global"
+  },
+  {
+    "year": 1916,
+    "date": "1916",
+    "scope": "Saudi Arabia",
+    "tier": 3,
+    "text": "The Arab Revolt begins against the Ottoman Empire in the Hejaz region",
+    "type": "world",
+    "lbl": "\ud83c\udf10 Saudi Arabia"
+  },
+  {
+    "year": 1917,
+    "date": "6 APR 1917",
+    "scope": "USA",
+    "tier": 2,
+    "text": "The United States formally declares war on Germany and enters World War I",
+    "type": "world",
+    "lbl": "\ud83c\udf10 USA"
+  },
+  {
+    "year": 1918,
+    "date": "11 NOV 1918",
+    "scope": "Global",
+    "tier": 1,
+    "text": "Armistice signed ending the combat of World War I",
+    "type": "world",
+    "lbl": "\ud83c\udf10 Global"
+  },
+  {
+    "year": 1919,
+    "date": "13 APR 1919",
+    "scope": "India",
+    "tier": 2,
+    "text": "The Jallianwala Bagh massacre takes place in Amritsar under British command",
+    "type": "world",
+    "lbl": "\ud83c\udf10 India"
+  },
+  {
+    "year": 1920,
+    "date": "19 MAR 1920",
+    "scope": "USA",
+    "tier": 3,
+    "text": "The US Senate refuses to ratify the Treaty of Versailles preventing the US from joining the League of Nations",
+    "type": "world",
+    "lbl": "\ud83c\udf10 USA"
+  },
+  {
+    "year": 1920,
+    "date": "26 AUG 1920",
+    "scope": "USA",
+    "tier": 2,
+    "text": "The 19th Amendment is certified granting American women the right to vote",
+    "type": "world",
+    "lbl": "\ud83c\udf10 USA"
+  },
+  {
+    "year": 1921,
+    "date": "1921",
+    "scope": "Global",
+    "tier": 1,
+    "text": "Rise of the Nazi Party in Germany under Adolf Hitler",
+    "type": "world",
+    "lbl": "\ud83c\udf10 Global"
+  },
+  {
+    "year": 1921,
+    "date": "1921",
+    "scope": "India",
+    "tier": 4,
+    "text": "The Moplah Rebellion breaks out in the Malabar region of Kerala",
+    "type": "world",
+    "lbl": "\ud83c\udf10 India"
+  },
+  {
+    "year": 1922,
+    "date": "11 JAN 1922",
+    "scope": "Global",
+    "tier": 2,
+    "text": "First successful insulin treatment for diabetes administered to a human patient",
+    "type": "world",
+    "lbl": "\ud83c\udf10 Global"
+  },
+  {
+    "year": 1922,
+    "date": "4 NOV 1922",
+    "scope": "Global",
+    "tier": 3,
+    "text": "Discovery of King Tutankhamun's intact tomb by Howard Carter",
+    "type": "world",
+    "lbl": "\ud83c\udf10 Global"
+  },
+  {
+    "year": 1923,
+    "date": "3 MAR 1923",
+    "scope": "Global",
+    "tier": 4,
+    "text": "Time Magazine publishes its first issue",
+    "type": "world",
+    "lbl": "\ud83c\udf10 Global"
+  },
+  {
+    "year": 1923,
+    "date": "NOV 1923",
+    "scope": "Global",
+    "tier": 3,
+    "text": "Hyperinflation in Weimar Germany peaks rendering the currency worthless",
+    "type": "world",
+    "lbl": "\ud83c\udf10 Global"
+  },
+  {
+    "year": 1924,
+    "date": "25 JAN 1924",
+    "scope": "Global",
+    "tier": 4,
+    "text": "The first Winter Olympic Games open in Chamonix France",
+    "type": "world",
+    "lbl": "\ud83c\udf10 Global"
+  },
+  {
+    "year": 1925,
+    "date": "10 JUL 1925",
+    "scope": "USA",
+    "tier": 4,
+    "text": "The Scopes Monkey Trial begins over the teaching of evolution in schools",
+    "type": "world",
+    "lbl": "\ud83c\udf10 USA"
+  },
+  {
+    "year": 1926,
+    "date": "16 MAR 1926",
+    "scope": "USA",
+    "tier": 4,
+    "text": "Robert Goddard launches the world's first liquid-fueled rocket",
+    "type": "world",
+    "lbl": "\ud83c\udf10 USA"
+  },
+  {
+    "year": 1926,
+    "date": "1926",
+    "scope": "Saudi Arabia",
+    "tier": 3,
+    "text": "Ibn Saud is crowned King of the Hejaz in the Grand Mosque of Mecca",
+    "type": "world",
+    "lbl": "\ud83c\udf10 Saudi Arabia"
+  },
+  {
+    "year": 1927,
+    "date": "21 MAY 1927",
+    "scope": "Global",
+    "tier": 2,
+    "text": "Charles Lindbergh completes the first solo nonstop transatlantic flight",
+    "type": "world",
+    "lbl": "\ud83c\udf10 Global"
+  },
+  {
+    "year": 1927,
+    "date": "6 OCT 1927",
+    "scope": "Global",
+    "tier": 4,
+    "text": "The Jazz Singer movie premiers introducing synchronized sound to cinema",
+    "type": "world",
+    "lbl": "\ud83c\udf10 Global"
+  },
+  {
+    "year": 1928,
+    "date": "28 SEP 1928",
+    "scope": "Global",
+    "tier": 1,
+    "text": "Discovery of Penicillin by Alexander Fleming at St Mary's Hospital",
+    "type": "world",
+    "lbl": "\ud83c\udf10 Global"
+  },
+  {
+    "year": 1929,
+    "date": "16 MAY 1929",
+    "scope": "Global",
+    "tier": 4,
+    "text": "The first Academy Awards ceremony is held in Los Angeles",
+    "type": "world",
+    "lbl": "\ud83c\udf10 Global"
+  },
+  {
+    "year": 1929,
+    "date": "29 OCT 1929",
+    "scope": "Global",
+    "tier": 1,
+    "text": "Black Tuesday stock market crash triggers the Great Depression",
+    "type": "world",
+    "lbl": "\ud83c\udf10 Global"
+  },
+  {
+    "year": 1930,
+    "date": "12 MAR 1930",
+    "scope": "India",
+    "tier": 2,
+    "text": "Mahatma Gandhi begins the Salt March to Dandi protesting British salt monopolies",
+    "type": "world",
+    "lbl": "\ud83c\udf10 India"
+  },
+  {
+    "year": 1930,
+    "date": "6 APR 1930",
+    "scope": "USA",
+    "tier": 5,
+    "text": "Hostess Twinkies hit the market shelves for the first time",
+    "type": "world",
+    "lbl": "\ud83c\udf10 USA"
+  },
+  {
+    "year": 1931,
+    "date": "1 MAY 1931",
+    "scope": "USA",
+    "tier": 3,
+    "text": "The Empire State Building officially opens in New York City",
+    "type": "world",
+    "lbl": "\ud83c\udf10 USA"
+  },
+  {
+    "year": 1932,
+    "date": "21 MAY 1932",
+    "scope": "Global",
+    "tier": 4,
+    "text": "Amelia Earhart completes her solo transatlantic flight landing in Ireland",
+    "type": "world",
+    "lbl": "\ud83c\udf10 Global"
+  },
+  {
+    "year": 1932,
+    "date": "23 SEP 1932",
+    "scope": "Saudi Arabia",
+    "tier": 1,
+    "text": "The Unification of Saudi Arabia is declared formally establishing the Kingdom",
+    "type": "world",
+    "lbl": "\ud83c\udf10 Saudi Arabia"
+  },
+  {
+    "year": 1933,
+    "date": "30 JAN 1933",
+    "scope": "Global",
+    "tier": 1,
+    "text": "Adolf Hitler is appointed Chancellor of Germany",
+    "type": "world",
+    "lbl": "\ud83c\udf10 Global"
+  },
+  {
+    "year": 1933,
+    "date": "29 MAY 1933",
+    "scope": "Saudi Arabia",
+    "tier": 2,
+    "text": "Saudi Arabia signs an oil concession agreement with Standard Oil of California",
+    "type": "world",
+    "lbl": "\ud83c\udf10 Saudi Arabia"
+  },
+  {
+    "year": 1935,
+    "date": "14 AUG 1935",
+    "scope": "USA",
+    "tier": 3,
+    "text": "President Franklin D Roosevelt signs the US Social Security Act into law",
+    "type": "world",
+    "lbl": "\ud83c\udf10 USA"
+  },
+  {
+    "year": 1935,
+    "date": "2 AUG 1935",
+    "scope": "India",
+    "tier": 3,
+    "text": "The British Parliament passes the Government of India Act 1935",
+    "type": "world",
+    "lbl": "\ud83c\udf10 India"
+  },
+  {
+    "year": 1937,
+    "date": "6 MAY 1937",
+    "scope": "Global",
+    "tier": 3,
+    "text": "The Hindenburg airship disaster occurs in New Jersey",
+    "type": "world",
+    "lbl": "\ud83c\udf10 Global"
+  },
+  {
+    "year": 1937,
+    "date": "27 MAY 1937",
+    "scope": "USA",
+    "tier": 3,
+    "text": "The Golden Gate Bridge opens to pedestrian traffic in San Francisco",
+    "type": "world",
+    "lbl": "\ud83c\udf10 USA"
+  },
+  {
+    "year": 1937,
+    "date": "21 DEC 1937",
+    "scope": "Global",
+    "tier": 4,
+    "text": "Disney releases Snow White and the Seven Dwarfs as the first full-length animated feature",
+    "type": "world",
+    "lbl": "\ud83c\udf10 Global"
+  },
+  {
+    "year": 1938,
+    "date": "3 MAR 1938",
+    "scope": "Saudi Arabia",
+    "tier": 1,
+    "text": "Commercial oil is discovered at Dammam No 7 transforming the global economy",
+    "type": "world",
+    "lbl": "\ud83c\udf10 Saudi Arabia"
+  },
+  {
+    "year": 1939,
+    "date": "1 SEP 1939",
+    "scope": "Global",
+    "tier": 1,
+    "text": "Germany invades Poland starting World War II in Europe",
+    "type": "world",
+    "lbl": "\ud83c\udf10 Global"
+  },
+  {
+    "year": 1939,
+    "date": "25 AUG 1939",
+    "scope": "Global",
+    "tier": 4,
+    "text": "The Wizard of Oz movie premiers in US theaters",
+    "type": "world",
+    "lbl": "\ud83c\udf10 Global"
+  },
+  {
+    "year": 1940,
+    "date": "10 MAY 1940",
+    "scope": "Global",
+    "tier": 2,
+    "text": "Winston Churchill becomes Prime Minister of the United Kingdom",
+    "type": "world",
+    "lbl": "\ud83c\udf10 Global"
+  },
+  {
+    "year": 1940,
+    "date": "23 MAR 1940",
+    "scope": "India",
+    "tier": 3,
+    "text": "The Lahore Resolution is passed demanding a separate homeland for Muslims",
+    "type": "world",
+    "lbl": "\ud83c\udf10 India"
+  },
+  {
+    "year": 1941,
+    "date": "1941",
+    "scope": "USA",
+    "tier": 4,
+    "text": "The Jeep brand is created for Allied military use",
+    "type": "world",
+    "lbl": "\ud83c\udf10 USA"
+  },
+  {
+    "year": 1941,
+    "date": "7 DEC 1941",
+    "scope": "Global",
+    "tier": 1,
+    "text": "The surprise military strike on Pearl Harbor brings the United States into WWII",
+    "type": "world",
+    "lbl": "\ud83c\udf10 Global"
+  },
+  {
+    "year": 1942,
+    "date": "19 FEB 1942",
+    "scope": "USA",
+    "tier": 3,
+    "text": "Executive Order 9066 is signed authorizing Japanese Internment camps",
+    "type": "world",
+    "lbl": "\ud83c\udf10 USA"
+  },
+  {
+    "year": 1942,
+    "date": "8 AUG 1942",
+    "scope": "India",
+    "tier": 2,
+    "text": "The Quit India Movement is launched by Mahatma Gandhi demanding immediate British withdrawal",
+    "type": "world",
+    "lbl": "\ud83c\udf10 India"
+  },
+  {
+    "year": 1943,
+    "date": "2 FEB 1943",
+    "scope": "Global",
+    "tier": 2,
+    "text": "The Battle of Stalingrad ends in decisive German defeat altering the war's course",
+    "type": "world",
+    "lbl": "\ud83c\udf10 Global"
+  },
+  {
+    "year": 1944,
+    "date": "6 JUN 1944",
+    "scope": "Global",
+    "tier": 1,
+    "text": "D-Day Normandy Landings are launched by Allied forces",
+    "type": "world",
+    "lbl": "\ud83c\udf10 Global"
+  },
+  {
+    "year": 1945,
+    "date": "4 FEB 1945",
+    "scope": "Global",
+    "tier": 2,
+    "text": "The Yalta Conference convenes shaping post-WWII borders and politics",
+    "type": "world",
+    "lbl": "\ud83c\udf10 Global"
+  },
+  {
+    "year": 1945,
+    "date": "14 FEB 1945",
+    "scope": "Saudi Arabia",
+    "tier": 2,
+    "text": "King Abdulaziz meets US President Franklin D Roosevelt aboard the USS Quincy",
+    "type": "world",
+    "lbl": "\ud83c\udf10 Saudi Arabia"
+  },
+  {
+    "year": 1945,
+    "date": "6 AUG 1945",
+    "scope": "Global",
+    "tier": 1,
+    "text": "Atomic bombing of Hiroshima by the United States military",
+    "type": "world",
+    "lbl": "\ud83c\udf10 Global"
+  },
+  {
+    "year": 1945,
+    "date": "2 SEP 1945",
+    "scope": "Global",
+    "tier": 1,
+    "text": "Official end of World War II signed aboard the USS Missouri",
+    "type": "world",
+    "lbl": "\ud83c\udf10 Global"
+  },
+  {
+    "year": 1945,
+    "date": "24 OCT 1945",
+    "scope": "Global",
+    "tier": 2,
+    "text": "The United Nations charter officially takes effect",
+    "type": "world",
+    "lbl": "\ud83c\udf10 Global"
+  },
+  {
+    "year": 1946,
+    "date": "15 FEB 1946",
+    "scope": "USA",
+    "tier": 3,
+    "text": "ENIAC the first general-purpose electronic computer is dedicated at Penn",
+    "type": "world",
+    "lbl": "\ud83c\udf10 USA"
+  },
+  {
+    "year": 1947,
+    "date": "15 AUG 1947",
+    "scope": "India",
+    "tier": 1,
+    "text": "India gains independence from British rule alongside the Partition of Pakistan",
+    "type": "world",
+    "lbl": "\ud83c\udf10 India"
+  },
+  {
+    "year": 1948,
+    "date": "30 JAN 1948",
+    "scope": "India",
+    "tier": 2,
+    "text": "Assassination of Mahatma Gandhi in New Delhi by Nathuram Godse",
+    "type": "world",
+    "lbl": "\ud83c\udf10 India"
+  },
+  {
+    "year": 1948,
+    "date": "14 MAY 1948",
+    "scope": "Global",
+    "tier": 2,
+    "text": "The State of Israel is officially declared sparking immediate regional conflict",
+    "type": "world",
+    "lbl": "\ud83c\udf10 Global"
+  },
+  {
+    "year": 1948,
+    "date": "30 DEC 1948",
+    "scope": "Saudi Arabia",
+    "tier": 4,
+    "text": "The Ghawar field the world's largest conventional oil field is discovered",
+    "type": "world",
+    "lbl": "\ud83c\udf10 Saudi Arabia"
+  },
+  {
+    "year": 1949,
+    "date": "12 MAY 1949",
+    "scope": "Global",
+    "tier": 3,
+    "text": "The Berlin Airlift ends as the Soviet Union lifts its blockade",
+    "type": "world",
+    "lbl": "\ud83c\udf10 Global"
+  },
+  {
+    "year": 1950,
+    "date": "26 JAN 1950",
+    "scope": "India",
+    "tier": 1,
+    "text": "The Constitution of India comes into effect establishing India as a Republic",
+    "type": "world",
+    "lbl": "\ud83c\udf10 India"
+  },
+  {
+    "year": 1950,
+    "date": "25 JUN 1950",
+    "scope": "Global",
+    "tier": 2,
+    "text": "The Korean War begins as North Korean troops cross the 38th parallel",
+    "type": "world",
+    "lbl": "\ud83c\udf10 Global"
+  },
+  {
+    "year": 1951,
+    "date": "14 JUN 1951",
+    "scope": "USA",
+    "tier": 4,
+    "text": "The first commercial computer UNIVAC I is delivered to the US Census Bureau",
+    "type": "world",
+    "lbl": "\ud83c\udf10 USA"
+  },
+  {
+    "year": 1952,
+    "date": "6 FEB 1952",
+    "scope": "Global",
+    "tier": 2,
+    "text": "Accession of Queen Elizabeth II to the throne following the death of King George VI",
+    "type": "world",
+    "lbl": "\ud83c\udf10 Global"
+  },
+  {
+    "year": 1953,
+    "date": "25 APR 1953",
+    "scope": "Global",
+    "tier": 1,
+    "text": "The molecular structure of DNA double helix is published by Watson and Crick",
+    "type": "world",
+    "lbl": "\ud83c\udf10 Global"
+  },
+  {
+    "year": 1953,
+    "date": "9 NOV 1953",
+    "scope": "Saudi Arabia",
+    "tier": 2,
+    "text": "King Abdulaziz Al Saud dies and is succeeded by King Saud",
+    "type": "world",
+    "lbl": "\ud83c\udf10 Saudi Arabia"
+  },
+  {
+    "year": 1954,
+    "date": "23 DEC 1954",
+    "scope": "USA",
+    "tier": 4,
+    "text": "The first successful human kidney transplant is performed in Boston",
+    "type": "world",
+    "lbl": "\ud83c\udf10 USA"
+  },
+  {
+    "year": 1955,
+    "date": "1 DEC 1955",
+    "scope": "USA",
+    "tier": 2,
+    "text": "Rosa Parks refuses to give up her bus seat launching the Montgomery Bus Boycott",
+    "type": "world",
+    "lbl": "\ud83c\udf10 USA"
+  },
+  {
+    "year": 1956,
+    "date": "5 JUN 1956",
+    "scope": "USA",
+    "tier": 4,
+    "text": "Elvis Presley performs Hound Dog on national television sparking cultural controversy",
+    "type": "world",
+    "lbl": "\ud83c\udf10 USA"
+  },
+  {
+    "year": 1957,
+    "date": "4 OCT 1957",
+    "scope": "Global",
+    "tier": 1,
+    "text": "Sputnik 1 is successfully launched into Earth orbit by the Soviet Union",
+    "type": "world",
+    "lbl": "\ud83c\udf10 Global"
+  },
+  {
+    "year": 1958,
+    "date": "1 OCT 1958",
+    "scope": "USA",
+    "tier": 3,
+    "text": "NASA is officially established replacing the NACA",
+    "type": "world",
+    "lbl": "\ud83c\udf10 USA"
+  },
+  {
+    "year": 1959,
+    "date": "1 JAN 1959",
+    "scope": "Global",
+    "tier": 3,
+    "text": "Fidel Castro takes power in Cuba following the Cuban Revolution",
+    "type": "world",
+    "lbl": "\ud83c\udf10 Global"
+  },
+  {
+    "year": 1960,
+    "date": "16 MAY 1960",
+    "scope": "Global",
+    "tier": 4,
+    "text": "The laser is invented by Theodore Maiman at Hughes Research Laboratories",
+    "type": "world",
+    "lbl": "\ud83c\udf10 Global"
+  },
+  {
+    "year": 1960,
+    "date": "14 SEP 1960",
+    "scope": "Saudi Arabia",
+    "tier": 2,
+    "text": "Saudi Arabia co-founds OPEC at the Baghdad Conference",
+    "type": "world",
+    "lbl": "\ud83c\udf10 Saudi Arabia"
+  },
+  {
+    "year": 1961,
+    "date": "12 APR 1961",
+    "scope": "Global",
+    "tier": 1,
+    "text": "Yuri Gagarin becomes the first human in space aboard Vostok 1",
+    "type": "world",
+    "lbl": "\ud83c\udf10 Global"
+  },
+  {
+    "year": 1961,
+    "date": "13 AUG 1961",
+    "scope": "Global",
+    "tier": 2,
+    "text": "Construction of the Berlin Wall begins separating East and West Berlin",
+    "type": "world",
+    "lbl": "\ud83c\udf10 Global"
+  },
+  {
+    "year": 1962,
+    "date": "16 OCT 1962",
+    "scope": "Global",
+    "tier": 1,
+    "text": "The Cuban Missile Crisis brings the world to the brink of nuclear war",
+    "type": "world",
+    "lbl": "\ud83c\udf10 Global"
+  },
+  {
+    "year": 1962,
+    "date": "21 NOV 1962",
+    "scope": "India",
+    "tier": 3,
+    "text": "The Sino-Indian War ends with a unilateral Chinese ceasefire",
+    "type": "world",
+    "lbl": "\ud83c\udf10 India"
+  },
+  {
+    "year": 1963,
+    "date": "28 AUG 1963",
+    "scope": "USA",
+    "tier": 2,
+    "text": "Martin Luther King Jr delivers his I Have a Dream speech in Washington DC",
+    "type": "world",
+    "lbl": "\ud83c\udf10 USA"
+  },
+  {
+    "year": 1963,
+    "date": "22 NOV 1963",
+    "scope": "USA",
+    "tier": 1,
+    "text": "Assassination of US President John F Kennedy in Dallas Texas",
+    "type": "world",
+    "lbl": "\ud83c\udf10 USA"
+  },
+  {
+    "year": 1964,
+    "date": "7 FEB 1964",
+    "scope": "USA",
+    "tier": 3,
+    "text": "The Beatles arrive in New York City launching the British Invasion",
+    "type": "world",
+    "lbl": "\ud83c\udf10 USA"
+  },
+  {
+    "year": 1964,
+    "date": "2 JUL 1964",
+    "scope": "USA",
+    "tier": 2,
+    "text": "The Civil Rights Act of 1964 is signed into law by President Lyndon B Johnson",
+    "type": "world",
+    "lbl": "\ud83c\udf10 USA"
+  },
+  {
+    "year": 1964,
+    "date": "2 NOV 1964",
+    "scope": "Saudi Arabia",
+    "tier": 3,
+    "text": "King Saud is deposed by family consensus and succeeded by King Faisal",
+    "type": "world",
+    "lbl": "\ud83c\udf10 Saudi Arabia"
+  },
+  {
+    "year": 1965,
+    "date": "8 MAR 1965",
+    "scope": "USA",
+    "tier": 2,
+    "text": "The United States sends its first ground combat troops to Vietnam",
+    "type": "world",
+    "lbl": "\ud83c\udf10 USA"
+  },
+  {
+    "year": 1966,
+    "date": "16 MAY 1966",
+    "scope": "Global",
+    "tier": 3,
+    "text": "The Cultural Revolution begins in China under Mao Zedong",
+    "type": "world",
+    "lbl": "\ud83c\udf10 Global"
+  },
+  {
+    "year": 1966,
+    "date": "11 JAN 1966",
+    "scope": "India",
+    "tier": 3,
+    "text": "Prime Minister Lal Bahadur Shastri dies suddenly in Tashkent",
+    "type": "world",
+    "lbl": "\ud83c\udf10 India"
+  },
+  {
+    "year": 1967,
+    "date": "15 JAN 1967",
+    "scope": "USA",
+    "tier": 4,
+    "text": "The first Super Bowl game is played in Los Angeles",
+    "type": "world",
+    "lbl": "\ud83c\udf10 USA"
+  },
+  {
+    "year": 1967,
+    "date": "3 DEC 1967",
+    "scope": "Global",
+    "tier": 3,
+    "text": "The world's first human-to-human heart transplant is performed in South Africa",
+    "type": "world",
+    "lbl": "\ud83c\udf10 Global"
+  },
+  {
+    "year": 1968,
+    "date": "4 APR 1968",
+    "scope": "USA",
+    "tier": 2,
+    "text": "Assassination of civil rights leader Martin Luther King Jr in Memphis",
+    "type": "world",
+    "lbl": "\ud83c\udf10 USA"
+  },
+  {
+    "year": 1969,
+    "date": "20 JUL 1969",
+    "scope": "Global",
+    "tier": 1,
+    "text": "The Apollo 11 Moon Landing is completed by Neil Armstrong and Buzz Aldrin",
+    "type": "world",
+    "lbl": "\ud83c\udf10 Global"
+  },
+  {
+    "year": 1969,
+    "date": "15 AUG 1969",
+    "scope": "USA",
+    "tier": 4,
+    "text": "The Woodstock music festival opens in upstate New York",
+    "type": "world",
+    "lbl": "\ud83c\udf10 USA"
+  },
+  {
+    "year": 1970,
+    "date": "1970",
+    "scope": "Saudi Arabia",
+    "tier": 3,
+    "text": "Saudi Arabia launches its first Five-Year Development Plan for modernization",
+    "type": "world",
+    "lbl": "\ud83c\udf10 Saudi Arabia"
+  },
+  {
+    "year": 1971,
+    "date": "15 NOV 1971",
+    "scope": "Global",
+    "tier": 3,
+    "text": "The first commercial microprocessor Intel 4004 is introduced",
+    "type": "world",
+    "lbl": "\ud83c\udf10 Global"
+  },
+  {
+    "year": 1971,
+    "date": "16 DEC 1971",
+    "scope": "India",
+    "tier": 2,
+    "text": "The Indo-Pakistani War of 1971 ends leading to the creation of Bangladesh",
+    "type": "world",
+    "lbl": "\ud83c\udf10 India"
+  },
+  {
+    "year": 1972,
+    "date": "17 JUN 1972",
+    "scope": "USA",
+    "tier": 3,
+    "text": "The Watergate break-in sparks a massive political scandal in Washington DC",
+    "type": "world",
+    "lbl": "\ud83c\udf10 USA"
+  },
+  {
+    "year": 1973,
+    "date": "29 MAR 1973",
+    "scope": "USA",
+    "tier": 2,
+    "text": "The last US military combat troops leave South Vietnam",
+    "type": "world",
+    "lbl": "\ud83c\udf10 USA"
+  },
+  {
+    "year": 1973,
+    "date": "17 OCT 1973",
+    "scope": "Saudi Arabia",
+    "tier": 2,
+    "text": "Saudi Arabia participates in the OAPEC oil embargo over the Yom Kippur War",
+    "type": "world",
+    "lbl": "\ud83c\udf10 Saudi Arabia"
+  },
+  {
+    "year": 1974,
+    "date": "18 MAY 1974",
+    "scope": "India",
+    "tier": 2,
+    "text": "India conducts its first successful nuclear bomb test Smiling Buddha",
+    "type": "world",
+    "lbl": "\ud83c\udf10 India"
+  },
+  {
+    "year": 1974,
+    "date": "9 AUG 1974",
+    "scope": "USA",
+    "tier": 1,
+    "text": "US President Richard Nixon resigns from office due to the Watergate scandal",
+    "type": "world",
+    "lbl": "\ud83c\udf10 USA"
+  },
+  {
+    "year": 1975,
+    "date": "25 MAR 1975",
+    "scope": "Saudi Arabia",
+    "tier": 2,
+    "text": "King Faisal is assassinated and succeeded by King Khalid",
+    "type": "world",
+    "lbl": "\ud83c\udf10 Saudi Arabia"
+  },
+  {
+    "year": 1975,
+    "date": "4 APR 1975",
+    "scope": "Global",
+    "tier": 2,
+    "text": "Microsoft is founded by Bill Gates and Paul Allen in New Mexico",
+    "type": "world",
+    "lbl": "\ud83c\udf10 Global"
+  },
+  {
+    "year": 1975,
+    "date": "25 JUN 1975",
+    "scope": "India",
+    "tier": 2,
+    "text": "Prime Minister Indira Gandhi declares a state of National Emergency",
+    "type": "world",
+    "lbl": "\ud83c\udf10 India"
+  },
+  {
+    "year": 1976,
+    "date": "1 APR 1976",
+    "scope": "Global",
+    "tier": 2,
+    "text": "Apple Computer Company is founded by Steve Wozniak and Steve Jobs",
+    "type": "world",
+    "lbl": "\ud83c\udf10 Global"
+  },
+  {
+    "year": 1977,
+    "date": "25 MAY 1977",
+    "scope": "Global",
+    "tier": 4,
+    "text": "The original Star Wars movie hits American theaters",
+    "type": "world",
+    "lbl": "\ud83c\udf10 Global"
+  },
+  {
+    "year": 1979,
+    "date": "1 JUL 1979",
+    "scope": "Global",
+    "tier": 3,
+    "text": "The Sony Walkman goes on sale revolutionizing personal music listening",
+    "type": "world",
+    "lbl": "\ud83c\udf10 Global"
+  },
+  {
+    "year": 1979,
+    "date": "20 NOV 1979",
+    "scope": "Saudi Arabia",
+    "tier": 2,
+    "text": "A group of armed extremists seizes the Grand Mosque in Mecca",
+    "type": "world",
+    "lbl": "\ud83c\udf10 Saudi Arabia"
+  },
+  {
+    "year": 1980,
+    "date": "18 MAY 1980",
+    "scope": "Global",
+    "tier": 4,
+    "text": "The catastrophic eruption of Mount St Helens occurs in Washington state",
+    "type": "world",
+    "lbl": "\ud83c\udf10 Global"
+  },
+  {
+    "year": 1980,
+    "date": "8 DEC 1980",
+    "scope": "Global",
+    "tier": 3,
+    "text": "John Lennon is assassinated outside his New York apartment building",
+    "type": "world",
+    "lbl": "\ud83c\udf10 Global"
+  },
+  {
+    "year": 1980,
+    "date": "1980",
+    "scope": "Saudi Arabia",
+    "tier": 3,
+    "text": "The Saudi government completes its 100 percent buyout of Aramco ownership",
+    "type": "world",
+    "lbl": "\ud83c\udf10 Saudi Arabia"
+  },
+  {
+    "year": 1981,
+    "date": "12 AUG 1981",
+    "scope": "Global",
+    "tier": 3,
+    "text": "IBM introduces its landmark Personal Computer PC model 5150",
+    "type": "world",
+    "lbl": "\ud83c\udf10 Global"
+  },
+  {
+    "year": 1982,
+    "date": "13 JUN 1982",
+    "scope": "Saudi Arabia",
+    "tier": 3,
+    "text": "King Khalid dies and is succeeded by King Fahd",
+    "type": "world",
+    "lbl": "\ud83c\udf10 Saudi Arabia"
+  },
+  {
+    "year": 1982,
+    "date": "1 OCT 1982",
+    "scope": "Global",
+    "tier": 4,
+    "text": "The first commercial compact disc CD player is released to consumers",
+    "type": "world",
+    "lbl": "\ud83c\udf10 Global"
+  },
+  {
+    "year": 1983,
+    "date": "3 APR 1983",
+    "scope": "Global",
+    "tier": 5,
+    "text": "The first commercial handheld cellular mobile phone call is made",
+    "type": "world",
+    "lbl": "\ud83c\udf10 Global"
+  },
+  {
+    "year": 1984,
+    "date": "31 OCT 1984",
+    "scope": "India",
+    "tier": 2,
+    "text": "Assassination of Indian Prime Minister Indira Gandhi by her bodyguards",
+    "type": "world",
+    "lbl": "\ud83c\udf10 India"
+  },
+  {
+    "year": 1984,
+    "date": "3 DEC 1984",
+    "scope": "India",
+    "tier": 3,
+    "text": "The Bhopal gas tragedy occurs exposing thousands to toxic gas",
+    "type": "world",
+    "lbl": "\ud83c\udf10 India"
+  },
+  {
+    "year": 1985,
+    "date": "13 SEP 1985",
+    "scope": "Global",
+    "tier": 5,
+    "text": "Super Mario Bros is released for the Nintendo Entertainment System in Japan",
+    "type": "world",
+    "lbl": "\ud83c\udf10 Global"
+  },
+  {
+    "year": 1986,
+    "date": "28 JAN 1986",
+    "scope": "Global",
+    "tier": 3,
+    "text": "The Space Shuttle Challenger explodes shortly after launch killing all crew",
+    "type": "world",
+    "lbl": "\ud83c\udf10 Global"
+  },
+  {
+    "year": 1986,
+    "date": "26 APR 1986",
+    "scope": "Global",
+    "tier": 2,
+    "text": "The Chernobyl nuclear power plant disaster occurs in the Soviet Union",
+    "type": "world",
+    "lbl": "\ud83c\udf10 Global"
+  },
+  {
+    "year": 1987,
+    "date": "19 OCT 1987",
+    "scope": "Global",
+    "tier": 3,
+    "text": "Black Monday stock market crash hits financial systems worldwide",
+    "type": "world",
+    "lbl": "\ud83c\udf10 Global"
+  },
+  {
+    "year": 1988,
+    "date": "21 DEC 1988",
+    "scope": "Global",
+    "tier": 4,
+    "text": "Pan Am Flight 103 explodes over Lockerbie Scotland in a terrorist bombing",
+    "type": "world",
+    "lbl": "\ud83c\udf10 Global"
+  },
+  {
+    "year": 1989,
+    "date": "9 NOV 1989",
+    "scope": "Global",
+    "tier": 1,
+    "text": "The Fall of the Berlin Wall begins signaling the collapse of Iron Curtain regimes",
+    "type": "world",
+    "lbl": "\ud83c\udf10 Global"
+  },
+  {
+    "year": 1990,
+    "date": "24 APR 1990",
+    "scope": "Global",
+    "tier": 3,
+    "text": "The Hubble Space Telescope is launched into orbit aboard Shuttle Discovery",
+    "type": "world",
+    "lbl": "\ud83c\udf10 Global"
+  },
+  {
+    "year": 1990,
+    "date": "2 AUG 1990",
+    "scope": "Saudi Arabia",
+    "tier": 2,
+    "text": "Iraq invades Kuwait prompting US forces to deploy to Saudi Arabia in Desert Shield",
+    "type": "world",
+    "lbl": "\ud83c\udf10 Saudi Arabia"
+  },
+  {
+    "year": 1991,
+    "date": "17 JAN 1991",
+    "scope": "Global",
+    "tier": 2,
+    "text": "Operation Desert Storm combat begins in the Persian Gulf War",
+    "type": "world",
+    "lbl": "\ud83c\udf10 Global"
+  },
+  {
+    "year": 1991,
+    "date": "24 JUL 1991",
+    "scope": "India",
+    "tier": 2,
+    "text": "Finance Minister Manmohan Singh announces economic liberalization reforms for India",
+    "type": "world",
+    "lbl": "\ud83c\udf10 India"
+  },
+  {
+    "year": 1991,
+    "date": "23 AUG 1991",
+    "scope": "Global",
+    "tier": 1,
+    "text": "The World Wide Web project is opened to the public for the first time",
+    "type": "world",
+    "lbl": "\ud83c\udf10 Global"
+  },
+  {
+    "year": 1991,
+    "date": "26 DEC 1991",
+    "scope": "Global",
+    "tier": 1,
+    "text": "The formal Dissolution of the Soviet Union takes place",
+    "type": "world",
+    "lbl": "\ud83c\udf10 Global"
+  },
+  {
+    "year": 1992,
+    "date": "1992",
+    "scope": "USA",
+    "tier": 5,
+    "text": "The first commercial SMS text message is sent over a mobile network",
+    "type": "world",
+    "lbl": "\ud83c\udf10 USA"
+  },
+  {
+    "year": 1993,
+    "date": "26 FEB 1993",
+    "scope": "USA",
+    "tier": 4,
+    "text": "A truck bomb explodes below the North Tower of the World Trade Center",
+    "type": "world",
+    "lbl": "\ud83c\udf10 USA"
+  },
+  {
+    "year": 1994,
+    "date": "10 MAY 1994",
+    "scope": "Global",
+    "tier": 2,
+    "text": "Nelson Mandela is inaugurated as the first Black President of South Africa",
+    "type": "world",
+    "lbl": "\ud83c\udf10 Global"
+  },
+  {
+    "year": 1995,
+    "date": "19 APR 1995",
+    "scope": "USA",
+    "tier": 3,
+    "text": "The Oklahoma City bombing destroys the Alfred P Murrah Federal Building",
+    "type": "world",
+    "lbl": "\ud83c\udf10 USA"
+  },
+  {
+    "year": 1996,
+    "date": "5 JUL 1996",
+    "scope": "Global",
+    "tier": 3,
+    "text": "Dolly the sheep becomes the first mammal successfully cloned from an adult cell",
+    "type": "world",
+    "lbl": "\ud83c\udf10 Global"
+  },
+  {
+    "year": 1998,
+    "date": "11 MAY 1998",
+    "scope": "India",
+    "tier": 3,
+    "text": "India conducts the Pokhran-II series of five underground nuclear tests",
+    "type": "world",
+    "lbl": "\ud83c\udf10 India"
+  },
+  {
+    "year": 1998,
+    "date": "4 SEP 1998",
+    "scope": "Global",
+    "tier": 2,
+    "text": "Google is officially incorporated by Larry Page and Sergey Brin",
+    "type": "world",
+    "lbl": "\ud83c\udf10 Global"
+  },
+  {
+    "year": 1999,
+    "date": "3 MAY 1999",
+    "scope": "India",
+    "tier": 3,
+    "text": "The Kargil War begins as Pakistani infiltrators cross the Line of Control",
+    "type": "world",
+    "lbl": "\ud83c\udf10 India"
+  },
+  {
+    "year": 2000,
+    "date": "1 JAN 2000",
+    "scope": "Global",
+    "tier": 3,
+    "text": "The Y2K millennium date rollover passes without widespread software failures",
+    "type": "world",
+    "lbl": "\ud83c\udf10 Global"
+  },
+  {
+    "year": 2001,
+    "date": "15 JAN 2001",
+    "scope": "Global",
+    "tier": 3,
+    "text": "Wikipedia is launched online by Jimmy Wales and Larry Sanger",
+    "type": "world",
+    "lbl": "\ud83c\udf10 Global"
+  },
+  {
+    "year": 2001,
+    "date": "11 SEP 2001",
+    "scope": "Global",
+    "tier": 1,
+    "text": "The September 11 terrorist attacks destroy the World Trade Center towers",
+    "type": "world",
+    "lbl": "\ud83c\udf10 Global"
+  },
+  {
+    "year": 2002,
+    "date": "27 FEB 2002",
+    "scope": "India",
+    "tier": 4,
+    "text": "The Godhra train burning triggers widespread communal violence in Gujarat",
+    "type": "world",
+    "lbl": "\ud83c\udf10 India"
+  },
+  {
+    "year": 2003,
+    "date": "20 MAR 2003",
+    "scope": "Global",
+    "tier": 2,
+    "text": "A United States led coalition begins the military invasion of Iraq",
+    "type": "world",
+    "lbl": "\ud83c\udf10 Global"
+  },
+  {
+    "year": 2004,
+    "date": "4 FEB 2004",
+    "scope": "Global",
+    "tier": 2,
+    "text": "The founding of Facebook launches the modern social media ecosystem",
+    "type": "world",
+    "lbl": "\ud83c\udf10 Global"
+  },
+  {
+    "year": 2004,
+    "date": "26 DEC 2004",
+    "scope": "Global",
+    "tier": 2,
+    "text": "A massive Indian Ocean earthquake and tsunami devastates coastal communities",
+    "type": "world",
+    "lbl": "\ud83c\udf10 Global"
+  },
+  {
+    "year": 2005,
+    "date": "14 FEB 2005",
+    "scope": "Global",
+    "tier": 3,
+    "text": "The video sharing platform YouTube is officially founded",
+    "type": "world",
+    "lbl": "\ud83c\udf10 Global"
+  },
+  {
+    "year": 2005,
+    "date": "29 AUG 2005",
+    "scope": "USA",
+    "tier": 3,
+    "text": "Hurricane Katrina makes landfall causing catastrophic damage to New Orleans",
+    "type": "world",
+    "lbl": "\ud83c\udf10 USA"
+  },
+  {
+    "year": 2005,
+    "date": "1 AUG 2005",
+    "scope": "Saudi Arabia",
+    "tier": 3,
+    "text": "King Fahd dies and is succeeded by King Abdullah",
+    "type": "world",
+    "lbl": "\ud83c\udf10 Saudi Arabia"
+  },
+  {
+    "year": 2006,
+    "date": "2006",
+    "scope": "Saudi Arabia",
+    "tier": 5,
+    "text": "The King Abdulaziz Center for World Culture design phase begins",
+    "type": "world",
+    "lbl": "\ud83c\udf10 Saudi Arabia"
+  },
+  {
+    "year": 2007,
+    "date": "29 JUN 2007",
+    "scope": "Global",
+    "tier": 1,
+    "text": "Apple introduces the first iPhone changing mobile computing forever",
+    "type": "world",
+    "lbl": "\ud83c\udf10 Global"
+  },
+  {
+    "year": 2008,
+    "date": "15 SEP 2008",
+    "scope": "Global",
+    "tier": 1,
+    "text": "The collapse of Lehman Brothers triggers a severe global financial crisis",
+    "type": "world",
+    "lbl": "\ud83c\udf10 Global"
+  },
+  {
+    "year": 2008,
+    "date": "26 NOV 2008",
+    "scope": "India",
+    "tier": 3,
+    "text": "The Mumbai terrorist attacks strike multiple hotels and a train station",
+    "type": "world",
+    "lbl": "\ud83c\udf10 India"
+  },
+  {
+    "year": 2009,
+    "date": "20 JAN 2009",
+    "scope": "USA",
+    "tier": 2,
+    "text": "Barack Obama is inaugurated as the first Black President of the United States",
+    "type": "world",
+    "lbl": "\ud83c\udf10 USA"
+  },
+  {
+    "year": 2010,
+    "date": "18 DEC 2010",
+    "scope": "Global",
+    "tier": 2,
+    "text": "The Arab Spring protest wave begins starting in Tunisia",
+    "type": "world",
+    "lbl": "\ud83c\udf10 Global"
+  },
+  {
+    "year": 2011,
+    "date": "2 MAY 2011",
+    "scope": "USA",
+    "tier": 3,
+    "text": "US special forces terminate Osama bin Laden in Abbottabad Pakistan",
+    "type": "world",
+    "lbl": "\ud83c\udf10 USA"
+  },
+  {
+    "year": 2012,
+    "date": "4 JUL 2012",
+    "scope": "Global",
+    "tier": 3,
+    "text": "CERN scientists confirm the discovery of the Higgs Boson particle",
+    "type": "world",
+    "lbl": "\ud83c\udf10 Global"
+  },
+  {
+    "year": 2014,
+    "date": "26 MAY 2014",
+    "scope": "India",
+    "tier": 2,
+    "text": "Narendra Modi is sworn in as the 14th Prime Minister of India",
+    "type": "world",
+    "lbl": "\ud83c\udf10 India"
+  },
+  {
+    "year": 2015,
+    "date": "23 JAN 2015",
+    "scope": "Saudi Arabia",
+    "tier": 3,
+    "text": "King Abdullah dies and is succeeded by King Salman",
+    "type": "world",
+    "lbl": "\ud83c\udf10 Saudi Arabia"
+  },
+  {
+    "year": 2016,
+    "date": "22 APR 2016",
+    "scope": "Global",
+    "tier": 2,
+    "text": "The Paris Agreement on global climate change is signed by world powers",
+    "type": "world",
+    "lbl": "\ud83c\udf10 Global"
+  },
+  {
+    "year": 2016,
+    "date": "8 NOV 2016",
+    "scope": "India",
+    "tier": 3,
+    "text": "The government of India announces the demonetization of high-value banknotes",
+    "type": "world",
+    "lbl": "\ud83c\udf10 India"
+  },
+  {
+    "year": 2016,
+    "date": "8 NOV 2016",
+    "scope": "USA",
+    "tier": 3,
+    "text": "Donald Trump wins the United States presidential election",
+    "type": "world",
+    "lbl": "\ud83c\udf10 USA"
+  },
+  {
+    "year": 2017,
+    "date": "21 JUN 2017",
+    "scope": "Saudi Arabia",
+    "tier": 3,
+    "text": "Mohammed bin Salman is appointed Crown Prince of Saudi Arabia",
+    "type": "world",
+    "lbl": "\ud83c\udf10 Saudi Arabia"
+  },
+  {
+    "year": 2018,
+    "date": "24 JUN 2018",
+    "scope": "Saudi Arabia",
+    "tier": 3,
+    "text": "The ban on women driving in Saudi Arabia is officially lifted",
+    "type": "world",
+    "lbl": "\ud83c\udf10 Saudi Arabia"
+  },
+  {
+    "year": 2019,
+    "date": "5 AUG 2019",
+    "scope": "India",
+    "tier": 3,
+    "text": "The government of India revokes the special autonomous status of Jammu and Kashmir",
+    "type": "world",
+    "lbl": "\ud83c\udf10 India"
+  },
+  {
+    "year": 2020,
+    "date": "11 MAR 2020",
+    "scope": "Global",
+    "tier": 1,
+    "text": "The WHO officially declares the COVID-19 outbreak a global pandemic",
+    "type": "world",
+    "lbl": "\ud83c\udf10 Global"
+  },
+  {
+    "year": 2020,
+    "date": "24 MAR 2020",
+    "scope": "India",
+    "tier": 2,
+    "text": "India implements a strict nationwide COVID-19 lockdown overnight",
+    "type": "world",
+    "lbl": "\ud83c\udf10 India"
+  },
+  {
+    "year": 2020,
+    "date": "8 DEC 2020",
+    "scope": "Global",
+    "tier": 1,
+    "text": "The first fully tested COVID-19 vaccine is administered to the public in the UK",
+    "type": "world",
+    "lbl": "\ud83c\udf10 Global"
+  },
+  {
+    "year": 2021,
+    "date": "6 JAN 2021",
+    "scope": "USA",
+    "tier": 3,
+    "text": "A crowd storms the United States Capitol disrupting the electoral vote count",
+    "type": "world",
+    "lbl": "\ud83c\udf10 USA"
+  },
+  {
+    "year": 2021,
+    "date": "25 DEC 2021",
+    "scope": "Global",
+    "tier": 3,
+    "text": "The James Webb Space Telescope is successfully launched into orbit",
+    "type": "world",
+    "lbl": "\ud83c\udf10 Global"
+  },
+  {
+    "year": 2022,
+    "date": "24 FEB 2022",
+    "scope": "Global",
+    "tier": 1,
+    "text": "Russia launches a full-scale military invasion of Ukraine",
+    "type": "world",
+    "lbl": "\ud83c\udf10 Global"
+  },
+  {
+    "year": 2023,
+    "date": "5 MAY 2023",
+    "scope": "Global",
+    "tier": 1,
+    "text": "The WHO declares an official end to the COVID-19 global health emergency",
+    "type": "world",
+    "lbl": "\ud83c\udf10 Global"
+  },
+  {
+    "year": 2023,
+    "date": "23 AUG 2023",
+    "scope": "India",
+    "tier": 3,
+    "text": "India's Chandrayaan-3 successfully lands a spacecraft near the lunar south pole",
+    "type": "world",
+    "lbl": "\ud83c\udf10 India"
+  },
+  {
+    "year": 2024,
+    "date": "2024",
+    "scope": "Global",
+    "tier": 2,
+    "text": "The Generative AI technology boom accelerates rapidly across major industries",
+    "type": "world",
+    "lbl": "\ud83c\udf10 Global"
+  },
+  {
+    "year": 2024,
+    "date": "8 APR 2024",
+    "scope": "Global",
+    "tier": 4,
+    "text": "A total solar eclipse crosses directly over North America",
+    "type": "world",
+    "lbl": "\ud83c\udf10 Global"
+  },
+  {
+    "year": 2024,
+    "date": "19 JUL 2024",
+    "scope": "Global",
+    "tier": 3,
+    "text": "A global IT internet outage disrupts flights and infrastructure via a corrupted update",
+    "type": "world",
+    "lbl": "\ud83c\udf10 Global"
+  },
+  {
+    "year": 2026,
+    "date": "2026",
+    "scope": "Global",
+    "tier": 4,
+    "text": "The global human population reaches an estimated milestone of 8.2 billion",
+    "type": "world",
+    "lbl": "\ud83c\udf10 Global"
+  }
+];
+        
+        let activeT = new Set([1, 2, 3, 4, 5]);
+        let layers = { "Personal": false, "Global": true, "USA": true, "India": true, "Saudi Arabia": true };
+        let personalData = [];
+
+        function getVal(s) {
+            const t = s.trim().split(" ");
+            if (t.length === 3) {
+                const m = { JAN:0, FEB:1, MAR:2, APR:3, MAY:4, JUN:5, JUL:6, AUG:7, SEP:8, OCT:9, NOV:10, DEC:11 };
+                return new Date(parseInt(t[2]), m[t[1].toUpperCase()] || 0, parseInt(t[0])).getTime();
+            }
+            return new Date(parseInt(s), 0, 1).getTime();
+        }
+
+        function updateStickyYearTrack() {
+            const nodes = document.querySelectorAll(".node");
+            const bubble = document.getElementById("activeYearDisplay");
+            if (!bubble || nodes.length === 0) return;
+            
+            let currentYear = bubble.innerText;
+            const triggerLine = window.innerHeight * 0.50; 
+            
+            for (let i = 0; i < nodes.length; i++) {
+                const rect = nodes[i].getBoundingClientRect();
+                if (rect.top <= triggerLine) {
+                    const yrAttr = nodes[i].getAttribute("data-year");
+                    if (yrAttr) currentYear = yrAttr;
+                } else {
+                    break;
+                }
+            }
+            if (bubble.innerText !== currentYear) bubble.innerText = currentYear;
+        }
+
+        async function decryptVaultEngine(password) {
+            try {
+                const binaryStr = atob(vaultPayload);
+                const bytes = new Uint8Array(binaryStr.length);
+                for (let i = 0; i < binaryStr.length; i++) bytes[i] = binaryStr.charCodeAt(i);
+
+                const salt = bytes.slice(0, 16);
+                const iv = bytes.slice(16, 28);
+                const encryptedData = bytes.slice(28);
+
+                const encoder = new TextEncoder();
+                const baseKey = await window.crypto.subtle.importKey(
+                    "raw", encoder.encode(password), { name: "PBKDF2" }, false, ["deriveKey"]
+                );
+
+                const cryptoKey = await window.crypto.subtle.deriveKey(
+                    { name: "PBKDF2", salt: salt, iterations: 600000, hash: "SHA-256" },
+                    baseKey, { name: "AES-GCM", length: 256 }, false, ["decrypt"]
+                );
+
+                const decryptedBuffer = await window.crypto.subtle.decrypt(
+                    { name: "AES-GCM", iv: iv }, cryptoKey, encryptedData
+                );
+
+                const decoder = new TextDecoder();
+                personalData = JSON.parse(decoder.decode(decryptedBuffer));
+                
+                localStorage.setItem("family_timeline_vault_key", password);
+                layers["Personal"] = true;
+                
+                // Adjust layout boundaries smoothly once decrypted
+                document.getElementById("lockOverlay").style.display = "none";
+                document.getElementById("unlockReminderBtn").style.display = "none";
+                const pBtn = document.getElementById("b-p");
+                pBtn.style.opacity = "1";
+                pBtn.style.pointerEvents = "auto";
+                pBtn.classList.add("active");
+                document.getElementById("c-p").checked = true;
+                
+                render();
+            } catch (err) {
+                alert("❌ Access Denied: Invalid cryptographic key.");
+                localStorage.removeItem("family_timeline_vault_key");
+            }
+        }
+
+        function checkAuthLifecycle() {
+            const savedKey = localStorage.getItem("family_timeline_vault_key");
+            if (savedKey) decryptVaultEngine(savedKey);
+        }
+
+        function triggerManualAuth() {
+            const pwd = document.getElementById("vaultPasswordInput").value.trim();
+            if (pwd) decryptVaultEngine(pwd);
+        }
+
+        function render() {
+            const div = document.getElementById("stream"); div.innerHTML = "";
+            
+            // Build dual track extraction
+            const filteredWorld = publicData.filter(e => layers[e.scope] && activeT.has(e.tier));
+            const filteredPersonal = layers["Personal"] ? personalData : [];
+            
+            let combined = [...filteredWorld, ...filteredPersonal];
+            combined.sort((a, b) => getVal(a.date) - getVal(b.date));
+
+            let finalNodes = [];
+            let yearBuckets = {};
+
+            combined.forEach(e => {
+                if (e.type === "world") {
+                    if (!yearBuckets[e.year]) yearBuckets[e.year] = [];
+                    yearBuckets[e.year].push(e);
+                } else {
+                    finalNodes.push(e);
+                }
+            });
+
+            Object.keys(yearBuckets).forEach(y => {
+                const bucket = yearBuckets[y];
+                if (bucket.length >= 4) {
+                    finalNodes.push({ year: parseInt(y), date: y, type: "cluster", events: bucket });
+                } else {
+                    bucket.forEach(e => finalNodes.push(e));
+                }
+            });
+
+            finalNodes.sort((a, b) => a.year - b.year);
+
+            if (finalNodes.length > 0 && document.getElementById("activeYearDisplay").innerText === "----") {
+                document.getElementById("activeYearDisplay").innerText = finalNodes[0].year;
+            }
+
+            for (let i = 0; i < finalNodes.length; i++) {
+                const current = finalNodes[i];
+                if (i > 0 && (current.year - finalNodes[i-1].year) > 4) {
+                    const gap = current.year - finalNodes[i-1].year;
+                    const bridge = document.createElement("div");
+                    bridge.className = "node n-bridge";
+                    bridge.setAttribute("data-year", current.year);
+                    bridge.innerHTML = `<div class="dot"></div><div class="card"><div class="meta"><span class="tag-b">⏩ GAP COMPRESSION BRIDGE</span></div><div class="txt" style="color:var(--ok); font-size:0.75rem; font-weight:bold;">${gap} Years Passed Chronologically</div></div>`;
+                    div.appendChild(bridge);
+                }
+
+                const el = document.createElement("div");
+                el.className = `node n-${current.type === 'cluster' ? 'world' : current.type}`;
+                el.setAttribute("data-year", current.year);
+                
+                if (current.type === "cluster") {
+                    let innerCards = "";
+                    current.events.forEach(ev => {
+                        innerCards += `<div class="carousel-card"><div class="carousel-meta"><span>${ev.lbl}</span><span>${ev.date}</span></div><div class="txt">${ev.text}</div></div>`;
+                    });
+                    el.innerHTML = `
+                        <div class="dot"></div>
+                        <div class="card">
+                            <div class="meta"><span class="tag-w">📦 CLUSTERED ERA — ${current.year}</span><span>${current.events.length} Events</span></div>
+                            <div class="carousel-container">${innerCards}</div>
+                        </div>`;
+                } else {
+                    el.innerHTML = `<div class="dot"></div><div class="card"><div class="meta"><span class="${current.type==='pers'?'tag-p':'tag-w'}">${current.lbl}</span><span>${current.date}</span></div><div class="txt">${current.text}</div></div>`;
+                }
+                div.appendChild(el);
+            }
+            updateStickyYearTrack();
+        }
+
+        function bind(bId, cId, key) {
+            document.getElementById(bId).addEventListener("click", function() {
+                if (key === "Personal" && !layers["Personal"]) return;
+                const c = document.getElementById(cId); c.checked = !c.checked;
+                layers[key] = c.checked; this.classList.toggle("active", c.checked); render();
+            });
+        }
+        bind("b-gl", "c-gl", "Global"); bind("b-us", "c-us", "USA"); bind("b-in", "c-in", "India"); bind("b-ks", "c-ks", "Saudi Arabia");
+        
+        // Explicitly bind the family checkbox layer independently
+        document.getElementById("b-p").addEventListener("click", function() {
+            if (!layers["Personal"]) return;
+            const c = document.getElementById("c-p"); c.checked = !c.checked;
+            layers["Personal"] = c.checked; this.classList.toggle("active", c.checked); render();
+        });
+
+        document.getElementById("tBar").addEventListener("click", (e) => {
+            if (!e.target.classList.contains("btn")) return;
+            const t = parseInt(e.target.dataset.t);
+            if (activeT.has(t)) { if (activeT.size > 1) activeT.delete(t); } else { activeT.add(t); }
+            e.target.classList.toggle("active"); render();
+        });
+
+        document.getElementById("vaultPasswordInput").addEventListener("keypress", (e) => {
+            if (e.key === "Enter") triggerManualAuth();
+        });
+
+        window.addEventListener("scroll", updateStickyYearTrack, { passive: true });
+        render();
+        checkAuthLifecycle();
+        
+    </script>
+</body>
+</html>
